@@ -51,7 +51,7 @@ function updateGridDuration() {
   const now = Date.now();
   const event = displayedGridEvent;
   const valid = event && Number.isFinite(event.at) && event.at > 0 && event.at <= event.measuredAt &&
-    Number.isFinite(event.measuredAt) && now >= event.measuredAt && now - event.measuredAt <= 900000;
+    Number.isFinite(event.measuredAt) && now >= event.measuredAt && now - event.measuredAt <= 3600000;
   badge.hidden = !valid;
   badge.textContent = valid ? (event.grid === 'on' ? 'Є вже ≈ ' : 'Немає вже ≈ ') +
     measurementAge(event.at, now).replace(/^Пройшло /, '') : '';
@@ -78,7 +78,7 @@ function measurementDateLabel(timestamp, now = Date.now()) {
 function render(data, example = false) {
   displayedMeasurementTime = data.collectedAt ?? null;
   updateMeasurementAge();
-  const stale = data.stale || !data.collectedAt || Date.now() - data.collectedAt > 900000;
+  const stale = data.stale || !data.collectedAt || Date.now() - data.collectedAt > 3600000;
   const grid = stale ? 'unknown' : data.grid;
   const output = stale ? 'unknown' : data.output;
   const soc = stale ? null : data.soc;
@@ -130,7 +130,7 @@ function render(data, example = false) {
 function example(mode) {
   const now = Date.now();
   const mains = mode === 'on' || mode === 'standby';
-  return { station: { name: 'Чавдар 13' }, collectedAt: now - (mode === 'stale' ? 1800000 : 300000),
+  return { station: { name: 'Чавдар 13' }, collectedAt: now - (mode === 'stale' ? 3660000 : 300000),
     stale: mode === 'stale', grid: mains ? 'on' : 'off', output: mode === 'output-off' ? 'off' : 'on',
     allPhasesZero: !mains, soc: mode === 'on' ? 82 : mode === 'standby' ? 100 : mode === 'output-off' ? 10 : 61,
     batteryMode: mode === 'on' ? 'charging' : ['standby', 'output-off'].includes(mode) ? 'idle' : 'discharging',
@@ -234,7 +234,7 @@ $('view-mode').addEventListener('change', () => {
 setInterval(refresh, 60000);
 setInterval(() => { updateMeasurementAge(); updateGridDuration(); }, 1000);
 setInterval(() => {
-  if (!isExample() && snapshot && Date.now() - snapshot.collectedAt > 900000) render(snapshot);
+  if (!isExample() && snapshot && Date.now() - snapshot.collectedAt > 3600000) render(snapshot);
 }, 15000);
 document.addEventListener('visibilitychange', () => { if (!document.hidden) refresh(); });
 

@@ -36,7 +36,9 @@ test('fresh inverter overrides older station battery, stale hides all live state
   assert.equal(data.grid, 'off'); assert.equal(data.output, 'on');
   assert.equal(data.soc, 60); assert.equal(data.loadWatts, 16833);
   assert.equal(data.batteryMode, 'discharging');
-  const stale = summarize({}, {}, [device], now + 16 * 60000);
+  assert.equal(summarize({}, {}, [device], now + 59 * 60000).stale, false);
+  assert.equal(summarize({}, {}, [device], now + 60 * 60000).stale, false);
+  const stale = summarize({}, {}, [device], now + 61 * 60000);
   assert.equal(stale.grid, 'unknown'); assert.equal(stale.soc, null); assert.equal(stale.loadWatts, null);
   assert.equal(summarize({}, {}, [device, { dataList: [] }], now).grid, 'unknown');
 });

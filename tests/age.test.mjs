@@ -74,7 +74,7 @@ test('grid duration follows the matching event and hides when missing, stale or 
   context.data.events.disappeared = { at: now - 90000 };
   vm.runInContext('render(data)', context);
   assert.equal(element('grid-duration').textContent, 'Немає вже ≈ 1 хв. 30 с.');
-  now += 900000;
+  now += 3600000;
   vm.runInContext('updateGridDuration()', context);
   assert.equal(element('grid-duration').hidden, true);
   assert.equal(element('grid-event').hidden, true);
