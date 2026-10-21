@@ -83,7 +83,8 @@ function render(data, example = false) {
   $('grid-detail').textContent = grid === 'on' ? 'Напруга на всіх фазах' :
     grid === 'off' ? (data.allPhasesZero ? 'Усі фази: 0 В' : 'Немає вхідної напруги') :
     grid === 'unstable' ? 'Перевірте стан фаз' : 'Немає актуальних показників';
-  const event = grid === 'on' ? data.events?.appeared : grid === 'off' ? data.events?.disappeared : null;
+  const event = data.historyError || data.historyAvailable === false ? null :
+    grid === 'on' ? data.events?.appeared : grid === 'off' ? data.events?.disappeared : null;
   $('grid-event').hidden = !event;
   $('grid-event').textContent = event ? (grid === 'on' ? 'З’явилася ≈ ' : 'Зникла ≈ ') +
     (date.format(event.at) !== date.format(data.collectedAt) ? date.format(event.at) + ', ' : '') + clock.format(Math.round(event.at / 60000) * 60000) : '';
@@ -116,7 +117,7 @@ function render(data, example = false) {
   $('update-note').textContent = example ? 'Демонстраційні значення для перегляду оформлення' : (staticMode ? 'Перевірка файлу щохвилини · оновлення через GitHub Actions' : 'Автоматичне оновлення щохвилини');
   notice(example ? 'Приклад відображення — це не поточні показники будинку.' :
     stale ? 'Дані застаріли або недоступні. Поточний стан живлення невідомий.' :
-    data.historyError ? 'Поточні показники отримано. Час зміни мережі тимчасово недоступний.' : '');
+    '');
 }
 function example(mode) {
   const now = Date.now();
