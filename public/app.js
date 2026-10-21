@@ -5,6 +5,7 @@ const clock = new Intl.DateTimeFormat('uk-UA', { timeZone: 'Europe/Kyiv', hour: 
 const date = new Intl.DateTimeFormat('uk-UA', { timeZone: 'Europe/Kyiv', day: '2-digit', month: '2-digit' });
 const decimal = new Intl.NumberFormat('uk-UA', { maximumFractionDigits: 1 });
 let config = null, snapshot = null, loading = false, requestVersion = 0;
+let displayedMeasurementTime = null;
 const isExample = () => $('view-mode').value !== 'live';
 function notice(text) { $('notice').textContent = text; $('notice').hidden = !text; }
 function unknown(message) {
@@ -23,7 +24,40 @@ function inverterState(data, stale) {
   if (noLoad && ['idle', 'discharging'].includes(data.batteryMode)) return 'standby';
   return 'unknown';
 }
+function measurementAge(timestamp, now = Date.now()) {
+  if (!Number.isFinite(timestamp) || timestamp <= 0) return '';
+  if (timestamp > now) return 'Час вимірювання попереду годинника';
+  const seconds = Math.floor((now - timestamp) / 1000);
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor(seconds / 60) % 60;
+  return 'Пройшло ' + (hours ? hours + ' год. ' : '') + minutes + ' хв. ' + seconds % 60 + ' с.';
+}
+function updateMeasurementAge() {
+  const element = $('data-elapsed');
+  element.textContent = measurementAge(displayedMeasurementTime);
+  element.hidden = !element.textContent;
+}
+function measurementDateLabel(timestamp, now = Date.now()) {
+  const calendar = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Europe/Kyiv', year: 'numeric', month: '2-digit', day: '2-digit'
+  });
+  const day = value => {
+    const parts = Object.fromEntries(calendar.formatToParts(value).map(p => [p.type, p.value]));
+    return parts.year + '-' + parts.month + '-' + parts.day;
+  };
+  const today = day(now);
+  const yesterday = new Date(Date.parse(today + 'T12:00:00Z') - 86400000).toISOString().slice(0, 10);
+  const measured = day(timestamp);
+  const label = measured === today ? 'сьогодні' : measured === yesterday ? 'вчора' :
+    new Intl.DateTimeFormat('uk-UA', {
+      timeZone: 'Europe/Kyiv', day: 'numeric', month: 'long',
+      ...(measured.slice(0, 4) !== today.slice(0, 4) ? { year: 'numeric' } : {})
+    }).format(timestamp);
+  return 'Дані станом на ' + label + ' ' + clock.format(timestamp);
+}
 function render(data, example = false) {
+  displayedMeasurementTime = data.collectedAt ?? null;
+  updateMeasurementAge();
   const stale = data.stale || !data.collectedAt || Date.now() - data.collectedAt > 900000;
   const grid = stale ? 'unknown' : data.grid;
   const output = stale ? 'unknown' : data.output;
@@ -31,8 +65,7 @@ function render(data, example = false) {
   $('station-name').textContent = data.station?.name || 'Чавдар 13';
   $('source-text').textContent = example ? 'Демонстрація' : stale ? 'Немає свіжих даних' : 'Deye Cloud';
   $('source-pill').dataset.state = example ? 'demo' : stale ? 'unknown' : 'on';
-  $('data-time').textContent = data.collectedAt ? 'Дані станом на ' + clock.format(data.collectedAt) : 'Очікуємо дані';
-  $('data-age').textContent = data.collectedAt ? date.format(data.collectedAt) : '';
+  $('data-time').textContent = data.collectedAt ? measurementDateLabel(data.collectedAt) : 'Очікуємо дані';
   $('grid-card').dataset.state = grid;
   $('grid-value').textContent = ({ on: 'Є', off: 'Немає', unstable: 'Нестабільна', unknown: 'Невідомо' })[grid] || 'Невідомо';
   $('grid-detail').textContent = grid === 'on' ? 'Напруга на всіх фазах' :
@@ -176,12 +209,8 @@ $('view-mode').addEventListener('change', () => {
   } catch (error) { unknown((staticMode ? 'Публічні дані недоступні. ' : 'Локальний сервер недоступний. ') + error.message); }
 })();
 setInterval(refresh, 60000);
+setInterval(updateMeasurementAge, 1000);
 setInterval(() => {
   if (!isExample() && snapshot && Date.now() - snapshot.collectedAt > 900000) render(snapshot);
 }, 15000);
 document.addEventListener('visibilitychange', () => { if (!document.hidden) refresh(); });
-
-
-
-
-

@@ -161,3 +161,26 @@ input, form select { width: 100%; min-width: 0; border: 1px solid #cddce7; borde
 @media (max-width: 350px) {
   #output-card .output-value { font-size: 21px; }
 }
+.freshness-time { flex-wrap: wrap; }
+#data-elapsed { font-size: 13px; font-variant-numeric: tabular-nums; color: #335d85; }
+@media (max-width: 760px) {
+  #data-elapsed { width: 100%; padding-left: 30px; }
+}
+
+/* Separate the measurement date from the live age counter. */
+#data-age { font-size: 13px; color: #627b91; }
+#data-elapsed {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  padding: 5px 10px;
+  border-radius: 20px;
+  background: #fff9;
+  border: 1px solid #cfdeec;
+  color: #355d7e;
+  line-height: 1.35;
+}
+@media (max-width: 760px) {
+  #data-age { width: auto; padding-left: 30px; }
+  #data-elapsed { width: auto; padding: 5px 10px; }
+}
