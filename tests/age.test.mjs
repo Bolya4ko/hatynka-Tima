@@ -85,3 +85,31 @@ test('grid duration follows the matching event and hides when missing, stale or 
   vm.runInContext('render({stale: true})', context);
   assert.equal(element('grid-duration').hidden, true);
 });
+
+test('consumption is visible only while the building is supplied by the inverter', async () => {
+  const source = await readFile(new URL('../public/app.js', import.meta.url), 'utf8');
+  const elements = new Map();
+  const element = id => {
+    if (!elements.has(id)) elements.set(id, { textContent: '', hidden: false, dataset: {} });
+    return elements.get(id);
+  };
+  const context = vm.createContext({ Date, Intl, URL, document: {
+    getElementById: element, querySelector: () => ({ content: 'local' })
+  } });
+  vm.runInContext(source.slice(0, source.indexOf('async function api(')), context);
+  const base = { collectedAt: Date.now(), output: 'on', grid: 'off', soc: 99,
+    batteryMode: 'discharging', loadWatts: 330 };
+  for (const [changes, visible] of [
+    [{}, true],
+    [{ grid: 'on', batteryMode: 'charging' }, false],
+    [{ grid: 'on', batteryMode: 'idle' }, false],
+    [{ output: 'off', loadWatts: 0 }, false],
+    [{ grid: 'unknown' }, false],
+    [{ stale: true }, false],
+    [{ loadWatts: null }, false]
+  ]) {
+    context.data = { ...base, ...changes };
+    vm.runInContext('render(data)', context);
+    assert.equal(element('load').hidden, !visible);
+  }
+});

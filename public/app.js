@@ -14,7 +14,15 @@ function unknown(message) {
   notice(message);
 }
 function inverterState(data, stale) {
-  if (stale || !['on', 'off'].includes(data.output)) return 'unknown';
+  if (stale || !['on', 'off'].includes(data.grid) || !['on', 'off'].includes(data.output)) return 'unknown';
+  // This dashboard follows the building's ATS scheme: mains has priority.
+  // Nonzero output telemetry alone does not establish that the ATS feeds the building from the inverter.
+  if (data.grid === 'on') {
+    if (data.batteryMode === 'charging') return 'charging';
+    if (data.output === 'off') return 'off';
+    if (data.batteryMode === 'idle') return 'standby';
+    return 'unknown';
+  }
   const watts = data.loadWatts;
   const hasLoad = typeof watts === 'number' && Number.isFinite(watts) && watts > 0;
   const noLoad = watts === 0;
@@ -80,7 +88,7 @@ function render(data, example = false) {
   $('data-time').textContent = data.collectedAt ? measurementDateLabel(data.collectedAt) : 'Очікуємо дані';
   $('grid-card').dataset.state = grid;
   $('grid-value').textContent = ({ on: 'Є', off: 'Немає', unstable: 'Нестабільна', unknown: 'Невідомо' })[grid] || 'Невідомо';
-  $('grid-detail').textContent = grid === 'on' ? 'Напруга на всіх фазах' :
+  $('grid-detail').textContent = grid === 'on' ? 'Напруга є на всіх фазах' :
     grid === 'off' ? (data.allPhasesZero ? 'Усі фази: 0 В' : 'Немає вхідної напруги') :
     grid === 'unstable' ? 'Перевірте стан фаз' : 'Немає актуальних показників';
   const event = data.historyError || data.historyAvailable === false ? null :
@@ -99,7 +107,7 @@ function render(data, example = false) {
     off: 'Немає напруги на виході',
     unknown: 'Стан невідомий'
   })[operation];
-  $('load').hidden = output !== 'on' || data.loadWatts == null;
+  $('load').hidden = operation !== 'supplying';
   const watts = data.loadWatts;
   $('load-value').textContent = watts == null ? '—' :
     watts > 0 && watts < 1 ? '< 1' : decimal.format(watts < 1000 ? watts : watts / 1000);
