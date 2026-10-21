@@ -1,0 +1,9 @@
+.local/
+node_modules/
+test-results/
+*.log
+.env
+.env.*
+!.env.example
+deye-settings.json
+dist/

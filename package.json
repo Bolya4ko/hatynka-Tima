@@ -1,0 +1,17 @@
+{
+  "name": "c13-power-dashboard",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Local Deye Cloud dashboard for Chavdar 13",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "node server.mjs",
+    "start:lan": "node server.mjs --lan",
+    "test": "node --test tests/*.test.mjs",
+    "build:pages": "node tools/build-pages.mjs",
+    "build:pages:local": "node tools/build-pages.mjs --local"
+  }
+}
