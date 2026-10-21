@@ -2,7 +2,7 @@ name: Update Deye dashboard
 on:
   workflow_dispatch:
   schedule:
-    - cron: '3-58/5 * * * *'
+    - cron: '3-58/5 * * * *'  
   push:
     branches: [main, master]
 permissions:
