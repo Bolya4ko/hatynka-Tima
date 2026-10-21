@@ -26,7 +26,7 @@ test('Pages artifact has relative assets, static mode and no server or secrets',
     assert.match(html, /name="dashboard-mode" content="static"/);
     assert.match(html, /src="\.\/app.js"/);
     assert.match(html, /href="\.\/styles.css"/);
-    assert.deepEqual((await readdir(directory)).sort(), ['.nojekyll', 'app.js', 'data', 'favicon.svg', 'index.html', 'styles.css'].sort());
+    assert.deepEqual((await readdir(directory)).sort(), ['.nojekyll', 'app.js', 'data', 'favicon.svg', 'index.html', 'styles.css', 'iphone-step-1.png', 'iphone-step-2.png', 'iphone-step-3.png'].sort());
     assert.deepEqual(await readdir(path.join(directory, 'data')), ['status.json']);
     const original = await readFile(new URL('../public/index.html', import.meta.url), 'utf8');
     assert.match(original, /name="dashboard-mode" content="local"/);
@@ -54,3 +54,4 @@ test('static browser requests nested repository JSON, never local config or secr
   assert.match(calls[0], /^https:\/\/example.github.io\/C13PowerDashboard\/data\/status.json\?t=/);
   await assert.rejects(api('/api/connect', {}), /GitHub Secrets/);
 });
+

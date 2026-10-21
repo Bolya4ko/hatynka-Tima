@@ -6,6 +6,7 @@ const date = new Intl.DateTimeFormat('uk-UA', { timeZone: 'Europe/Kyiv', day: '2
 const decimal = new Intl.NumberFormat('uk-UA', { maximumFractionDigits: 1 });
 let config = null, snapshot = null, loading = false, requestVersion = 0;
 let displayedMeasurementTime = null;
+let displayedGridEvent = null;
 const isExample = () => $('view-mode').value !== 'live';
 function notice(text) { $('notice').textContent = text; $('notice').hidden = !text; }
 function unknown(message) {
@@ -36,6 +37,17 @@ function updateMeasurementAge() {
   const element = $('data-elapsed');
   element.textContent = measurementAge(displayedMeasurementTime);
   element.hidden = !element.textContent;
+}
+function updateGridDuration() {
+  const badge = $('grid-duration');
+  const now = Date.now();
+  const event = displayedGridEvent;
+  const valid = event && Number.isFinite(event.at) && event.at > 0 && event.at <= event.measuredAt &&
+    Number.isFinite(event.measuredAt) && now >= event.measuredAt && now - event.measuredAt <= 900000;
+  badge.hidden = !valid;
+  badge.textContent = valid ? (event.grid === 'on' ? 'Є вже ≈ ' : 'Немає вже ≈ ') +
+    measurementAge(event.at, now).replace(/^Пройшло /, '') : '';
+  if (!valid) $('grid-event').hidden = true;
 }
 function measurementDateLabel(timestamp, now = Date.now()) {
   const calendar = new Intl.DateTimeFormat('en-CA', {
@@ -75,6 +87,8 @@ function render(data, example = false) {
   $('grid-event').hidden = !event;
   $('grid-event').textContent = event ? (grid === 'on' ? 'З’явилася ≈ ' : 'Зникла ≈ ') +
     (date.format(event.at) !== date.format(data.collectedAt) ? date.format(event.at) + ', ' : '') + clock.format(Math.round(event.at / 60000) * 60000) : '';
+  displayedGridEvent = event && !stale ? { at: event.at, measuredAt: data.collectedAt, grid } : null;
+  updateGridDuration();
   const operation = inverterState(data, stale);
   $('output-card').dataset.state = ({ supplying: 'on', charging: 'on', standby: 'standby', off: 'off', unknown: 'unknown' })[operation];
   $('output-value').textContent = ({
@@ -209,8 +223,12 @@ $('view-mode').addEventListener('change', () => {
   } catch (error) { unknown((staticMode ? 'Публічні дані недоступні. ' : 'Локальний сервер недоступний. ') + error.message); }
 })();
 setInterval(refresh, 60000);
-setInterval(updateMeasurementAge, 1000);
+setInterval(() => { updateMeasurementAge(); updateGridDuration(); }, 1000);
 setInterval(() => {
   if (!isExample() && snapshot && Date.now() - snapshot.collectedAt > 900000) render(snapshot);
 }, 15000);
 document.addEventListener('visibilitychange', () => { if (!document.hidden) refresh(); });
+
+const installHelp = $('install-help');
+$('open-install-help').addEventListener('click', () => installHelp.showModal());
+$('close-install-help').addEventListener('click', () => installHelp.close());

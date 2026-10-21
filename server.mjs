@@ -20,6 +20,9 @@ const assets = new Map([
   ['/index.html', ['index.html', 'text/html; charset=utf-8']],
   ['/app.js', ['app.js', 'text/javascript; charset=utf-8']],
   ['/styles.css', ['styles.css', 'text/css; charset=utf-8']],
+  ['/iphone-step-1.png', ['iphone-step-1.png', 'image/png']],
+  ['/iphone-step-2.png', ['iphone-step-2.png', 'image/png']],
+  ['/iphone-step-3.png', ['iphone-step-3.png', 'image/png']],
   ['/favicon.svg', ['favicon.svg', 'image/svg+xml']]
 ]);
 async function jsonBody(req) {
@@ -152,4 +155,5 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     console.log('Зупинка: Ctrl+C. Дані Deye не записуються в журнал.');
   });
 }
+
 

@@ -184,3 +184,36 @@ input, form select { width: 100%; min-width: 0; border: 1px solid #cddce7; borde
   #data-age { width: auto; padding-left: 30px; }
   #data-elapsed { width: auto; padding: 5px 10px; }
 }
+
+.install-help-button {
+  margin-top: 18px; border: 1px solid #cadce7; border-radius: 11px;
+  padding: 11px 16px; min-height: 44px; color: #285c7e; background: #ffffffb3;
+  font-size: 14px; font-weight: 600;
+}
+.install-help-button:hover { background: white; }
+#install-help { width: min(1020px, calc(100% - 28px)); padding: 28px; }
+#install-help .dialog-heading h2 { font-size: clamp(22px, 3vw, 28px); }
+#install-help a { color: #176a62; text-underline-offset: 3px; }
+.install-steps { list-style: none; padding: 0; margin: 24px 0; display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 22px; }
+.install-steps li { min-width: 0; }
+.install-steps h3 { display: flex; align-items: center; gap: 9px; margin: 0; font-size: 16px; line-height: 1.4; }
+.install-steps h3 span { display: grid; place-items: center; width: 27px; height: 27px; flex-shrink: 0; border-radius: 50%; background: #e3f1ec; color: #176a62; }
+.install-steps p { font-size: 13px; color: #62768b; line-height: 1.5; margin: 10px 0 16px; min-height: 40px; }
+.install-shot { position: relative; margin: 0 auto; width: 100%; max-width: 301px; border-radius: 14px; overflow: hidden; box-shadow: 0 4px 18px #18374914; }
+.install-shot img { display: block; width: 100%; height: auto; }
+.install-finish { padding: 16px; background: #edf6f2; border-radius: 12px; font-size: 15px; line-height: 1.6; }
+@media (max-width: 760px) {
+  #install-help { padding: 20px; }
+  .install-steps { grid-template-columns: 1fr; gap: 28px; }
+  .install-steps p { min-height: 0; }
+}
+
+.install-help-button { display: inline-flex; align-items: center; gap: 9px; text-align: left; }
+.install-help-button svg { width: 22px; height: 22px; flex-shrink: 0; }
+
+.grid-duration {
+  display: inline-block; max-width: 100%; margin: 2px 0 10px;
+  padding: 6px 10px; border: 1px solid var(--accent); border-radius: 12px;
+  background: var(--tint); color: var(--accent); font-size: 13px;
+  line-height: 1.45; font-weight: 600; font-variant-numeric: tabular-nums;
+}

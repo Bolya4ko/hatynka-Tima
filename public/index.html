@@ -61,6 +61,7 @@
         <p class="main-value" id="grid-value">Невідомо</p>
         <div class="card-bottom">
           <p class="event-time" id="grid-event" hidden></p>
+          <span id="grid-duration" class="grid-duration" hidden></span>
           <p class="secondary" id="grid-detail">Очікуємо показники</p>
         </div>
       </article>
@@ -101,6 +102,7 @@
         </select>
       </label>
     </footer>
+    <button type="button" class="install-help-button" id="open-install-help" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="2" width="12" height="20" rx="3"/><path d="M10 5h4M11 19h2"/></svg><span>Як додати на робочий стіл iPhone</span></button>
   </main>
 
   <dialog id="settings-dialog" aria-labelledby="settings-title">
@@ -122,6 +124,41 @@
       <button class="primary" type="submit">Підключити <svg><use href="#i-arrow"/></svg></button>
     </form>
     <p class="form-message" id="form-message" role="status"></p>
+  </dialog>
+  <dialog id="install-help" aria-labelledby="install-help-title">
+    <div class="dialog-heading">
+      <div><p class="eyebrow">ЗАВЖДИ ПІД РУКОЮ</p><h2 id="install-help-title">Додайте «Чавдар 13» на iPhone</h2></div>
+      <button class="close-button" id="close-install-help" aria-label="Закрити інструкцію" autofocus>×</button>
+    </div>
+    <p class="dialog-intro">Відкрийте <a href="https://sergeymaximenko.github.io/C13PowerDashboard/" target="_blank" rel="noopener">дашборд у Safari</a>. Потім натисніть виділені кнопки.</p>
+    <ol class="install-steps">
+      <li>
+        <h3><span>1</span> Відкрийте меню «…»</h3>
+        <p>Кнопка праворуч унизу Safari.</p>
+        <figure class="install-shot shot-menu">
+          <img src="./iphone-step-1.png" alt="Панель Safari: кнопка з трьома крапками праворуч унизу виділена рамкою." width="500" height="430">
+
+        </figure>
+      </li>
+      <li>
+        <h3><span>2</span> Натисніть «Поширити»</h3>
+        <p>Перший пункт відкритого меню.</p>
+        <figure class="install-shot shot-share">
+          <img src="./iphone-step-2.png" alt="Меню Safari: верхній пункт «Поширити» виділений рамкою." width="883" height="926">
+
+        </figure>
+      </li>
+      <li>
+        <h3><span>3</span> «На Початковий екран»</h3>
+        <p>За потреби прокрутіть список дій униз.</p>
+        <figure class="install-shot shot-home">
+          <img src="./iphone-step-3.png" alt="Список дій: пункт «На Початковий екран» унизу виділений рамкою." width="525" height="766">
+
+        </figure>
+      </li>
+    </ol>
+    <p class="install-finish"><strong>Завершення:</strong> залиште назву «Чавдар 13» і натисніть <strong>«Додати»</strong>. Якщо є перемикач «Відкривати як вебзастосунок», увімкніть його.</p>
+    <p class="secondary">На початковому екрані з’явиться значок дашборда. Для свіжих показників потрібен інтернет.</p>
   </dialog>
 </body>
 </html>

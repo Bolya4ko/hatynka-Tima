@@ -29,7 +29,7 @@ export async function buildPages(data, directory = path.join(root, 'dist')) {
   let html = await readFile(path.join(root, 'public/index.html'), 'utf8');
   html = html.replace('name="dashboard-mode" content="local"', 'name="dashboard-mode" content="static"');
   await writeFile(path.join(directory, 'index.html'), html);
-  for (const name of ['app.js', 'styles.css', 'favicon.svg'])
+  for (const name of ['app.js', 'styles.css', 'favicon.svg', 'iphone-step-1.png', 'iphone-step-2.png', 'iphone-step-3.png'])
     await copyFile(path.join(root, 'public', name), path.join(directory, name));
   await writeFile(path.join(directory, '.nojekyll'), '');
   await writeFile(path.join(directory, 'data/status.json'), JSON.stringify(publicStatus(data)));
@@ -60,3 +60,4 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     process.exitCode = 1;
   }
 }
+
