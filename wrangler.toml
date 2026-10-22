@@ -1,6 +1,7 @@
 name = "deye-power-dashboard"
 main = "worker/index.mjs"
 compatibility_date = "2025-01-01"
+account_id = "8ea72c7fb9963b2269f70ff4126b8d78"
 compatibility_flags = ["nodejs_compat"]
 workers_dev = true
 preview_urls = false   # не створювати зайві публічні адреси для кожної версії
