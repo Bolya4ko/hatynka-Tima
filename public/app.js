@@ -3,7 +3,7 @@ const $ = id => document.getElementById(id);
 const clock = new Intl.DateTimeFormat('uk-UA', { timeZone: 'Europe/Kyiv', hour: '2-digit', minute: '2-digit' });
 const date = new Intl.DateTimeFormat('uk-UA', { timeZone: 'Europe/Kyiv', day: '2-digit', month: '2-digit' });
 const decimal = new Intl.NumberFormat('uk-UA', { maximumFractionDigits: 1 });
-let snapshot = null, loading = false, requestVersion = 0;
+let snapshot = null, loading = false, requestVersion = 0, lastLoadedAt = 0, retries = 0;
 let displayedMeasurementTime = null;
 let displayedGridEvent = null;
 const isExample = () => $('view-mode').value !== 'live';
@@ -11,6 +11,10 @@ const isExample = () => $('view-mode').value !== 'live';
 function setLoading(on) {
   document.querySelector('.cards')?.classList.toggle('skeleton', on);
   document.querySelector('.freshness')?.classList.toggle('loading', on);
+}
+// SVG elements have no `hidden` property, only the attribute, so it is toggled directly.
+function setHidden(element, on) {
+  if (element.toggleAttribute) element.toggleAttribute('hidden', on); else element.hidden = on;
 }
 function notice(text) { $('notice').textContent = text; $('notice').hidden = !text; }
 function unknown(message) {
@@ -116,17 +120,31 @@ function render(data, example = false) {
   $('load-value').textContent = watts == null ? '—' :
     watts > 0 && watts < 1 ? '< 1' : decimal.format(watts < 1000 ? watts : watts / 1000);
   $('load-unit').textContent = watts != null && watts < 1000 ? 'Вт' : 'кВт';
-  $('output-detail').hidden = output === 'on' && data.loadWatts != null;
+  // The headline already says "Немає напруги на виході": do not repeat it below.
+  $('output-detail').hidden = operation === 'off' || (output === 'on' && data.loadWatts != null);
   $('output-detail').textContent = output === 'on' ? 'Напруга на виході є' : output === 'off' ? 'Напруги на виході немає' :
     output === 'unstable' ? 'Показники напруги нестабільні' : 'Недостатньо актуальних показників';
-  $('battery-card').dataset.state = soc == null ? 'unknown' : soc <= 20 ? 'off' : soc <= 40 ? 'unstable' : 'on';
+  // Amber while the battery is discharging (red below 20%, as a warning); green otherwise.
+  $('battery-card').dataset.state = soc == null ? 'unknown' : soc <= 20 ? 'off' :
+    (soc <= 40 || (!stale && data.batteryMode === 'discharging')) ? 'unstable' : 'on';
   $('soc-value').textContent = soc == null ? '—' : decimal.format(soc);
   $('soc-percent').hidden = soc == null;
   $('battery-progress').hidden = soc == null;
   $('battery-progress').value = soc ?? 0;
+  // Battery character replaces the static icon while charging (happy) or discharging (sleepy).
+  const charging = !stale && data.batteryMode === 'charging', discharging = !stale && data.batteryMode === 'discharging';
+  setHidden($('battery-icon'), charging || discharging);
+  setHidden($('battery-mascot'), !(charging || discharging));
+  setHidden($('mascot-charging'), !charging);
+  setHidden($('mascot-sleeping'), !discharging);
+  $('battery-card').dataset.mascot = charging || discharging ? 'on' : '';
+  // The level loops over the whole battery: from empty to full while charging, from full to empty while discharging.
+  // The real charge is the number on the card; the animation only shows the direction.
+  $('battery-mascot').style?.setProperty('--lvl', discharging ? '1' : '0.04');
+  $('battery-mascot').style?.setProperty('--lvl2', discharging ? '0.04' : '1');
   $('battery-mode').textContent = stale ? 'Немає актуальних показників' :
     ({ discharging: 'Розряджається', charging: 'Заряджається', idle: 'У режимі очікування', unknown: 'Стан заряду невідомий' })[data.batteryMode] || 'Стан заряду невідомий';
-  $('update-note').textContent = example ? 'Демонстраційні значення для перегляду оформлення' : 'Автоматичне оновлення щохвилини';
+  $('update-note').textContent = example ? 'Демонстраційні значення для перегляду оформлення' : 'Щоб оновити дані, натисніть кнопку вгорі';
   notice(example ? 'Приклад відображення — це не поточні показники будинку.' :
     stale ? 'Дані застаріли або недоступні. Поточний стан живлення невідомий.' :
     '');
@@ -174,8 +192,10 @@ async function refresh() {
     // Never show an older measurement than the one already on screen (different servers may answer out of order).
     if (snapshot && Number.isFinite(snapshot.collectedAt) && data.collectedAt < snapshot.collectedAt) return;
     snapshot = data; render(data);
+    lastLoadedAt = Date.now(); retries = 0;
   } catch (error) {
-    if (version === requestVersion && !isExample()) { unknown(error.message); setTimeout(refresh, 10000); }
+    // After a failure try again a few times (10 s apart), then wait for the user.
+    if (version === requestVersion && !isExample()) { unknown(error.message); if (retries++ < 3) setTimeout(refresh, 10000); }
   } finally {
     // An answer to an outdated request (the view was switched meanwhile) must not touch the state of the new one.
     if (version === requestVersion) { loading = false; $('refresh').disabled = false; $('refresh').classList.remove('spinning'); setLoading(false); }
@@ -187,7 +207,16 @@ function showExample() {
   if (mode === 'loading') { render({ stale: true, collectedAt: null, grid: 'unknown', output: 'unknown', soc: null, events: {} }, true); notice(''); $('data-time').textContent = 'Завантажуємо дані…'; }
   else render(example(mode), true);
 }
-$('refresh').addEventListener('click', () => isExample() ? showExample() : refresh());
+$('refresh').addEventListener('click', () => {
+  if (isExample()) return showExample();
+  // Data loaded less than 10 s ago are already fresh: only play a short spin, send nothing.
+  if (!loading && Date.now() - lastLoadedAt < 10000) {
+    $('refresh').classList.add('spinning');
+    setTimeout(() => { if (!loading) $('refresh').classList.remove('spinning'); }, 700);
+    return;
+  }
+  refresh();
+});
 $('view-mode').addEventListener('change', () => {
   requestVersion++;
   if (isExample()) showExample();
@@ -204,12 +233,15 @@ $('view-mode').addEventListener('change', () => {
   }
 });
 refresh();
-setInterval(refresh, 60000);
+// No periodic polling: data are loaded when the page opens, on the refresh button, and when the user comes back
+// to the page after a while (at most once a minute), so an idle page makes no requests.
 setInterval(() => { updateMeasurementAge(); updateGridDuration(); }, 1000);
 setInterval(() => {
   if (!isExample() && snapshot && Date.now() - snapshot.collectedAt > 3600000) render(snapshot);
 }, 15000);
-document.addEventListener('visibilitychange', () => { if (!document.hidden) refresh(); });
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && Date.now() - lastLoadedAt > 60000) refresh();
+});
 
 const installHelp = $('install-help');
 $('open-install-help').addEventListener('click', () => installHelp.showModal());

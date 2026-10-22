@@ -10,8 +10,8 @@ preview_urls = false   # не створювати зайві публічні �
 [vars]
 DEYE_STATION_ID = "62524584"
 DEYE_STATION_NAME = "Чавдар 13"
-CACHE_SECONDS = "30"          # як довго Worker віддає ту саму відповідь
-HISTORY_CACHE_SECONDS = "30"  # кеш історії (мережа з'явилась / зникла)
+CACHE_SECONDS = "30"          # як довго Worker віддає ту саму відповідь без звернення до Deye
+# Історію (мережа з'явилась / зникла) Worker завантажує лише коли з'явилося нове вимірювання інвертора.
 # Додаткові станції, доступні через ?station=ID. Формат: "ID:назва,ID:назва". Без параметра — головна станція.
 ALLOWED_STATION_IDS = "61167187:Максименко"
 # ALLOWED_ORIGIN = "https://sergeymaximenko.github.io"   # коли буде адреса сторінки

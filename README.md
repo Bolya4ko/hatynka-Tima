@@ -22,7 +22,8 @@ Deye Cloud  →  Cloudflare Worker (worker/)  →  сторінка (public/)
 - Локальний запуск: скопіюйте `.dev.vars.example` у `.dev.vars`, впишіть значення, потім `npx wrangler dev` і відкрийте `http://127.0.0.1:8787/api/status`.
 - Публікація: `npx wrangler deploy`.
 - Секрети: `npx wrangler secret put DEYE_APP_ID` (аналогічно `DEYE_APP_SECRET`, `DEYE_LOGIN`, `DEYE_PASSWORD`).
-- Кеш налаштовується в `wrangler.toml`: `CACHE_SECONDS` (поточні показники) і `HISTORY_CACHE_SECONDS` (історія переходів). Заголовки відповіді `X-Cache` і `X-Cache-Age` показують, чи відповідь узято з кешу.
+- Кеш відповіді налаштовується в `wrangler.toml` (`CACHE_SECONDS`). Заголовки `X-Cache` і `X-Cache-Age` показують, чи відповідь узято з кешу.
+- Історія переходів (мережа з’явилась / зникла) вантажиться лише коли з’явилося нове вимірювання інвертора; завершений день вантажиться один раз. Це зменшує навантаження на процесор Worker.
 
 Логер Deye передає дані в хмару приблизно раз на 5 хвилин; Worker цю затримку не збільшує, але й не прискорює.
 

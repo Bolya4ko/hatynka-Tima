@@ -76,7 +76,36 @@
 
       <article class="status-card battery-card" id="battery-card" data-state="unknown">
         <div class="card-top"><span class="card-index">03 / БАТАРЕЯ</span><span class="status-dot" aria-hidden="true"></span></div>
-        <div class="card-icon"><svg><use href="#i-battery"/></svg></div>
+        <div class="card-icon">
+          <svg id="battery-icon"><use href="#i-battery"/></svg>
+          <svg id="battery-mascot" class="mascot" viewBox="34 -4 104 124" aria-hidden="true" hidden>
+            <g id="mascot-charging" hidden>
+              <path class="m-line" d="M85 20C85 6 112 12 118 14"/>
+              <rect class="m-plug" x="116" y="8" width="14" height="12" rx="2"/>
+              <path class="m-line m-plug-line" d="M130 11h5M130 17h5"/>
+              <g class="m-hop">
+                <rect class="m-body" x="55" y="24" width="60" height="84" rx="10"/>
+                <rect x="75" y="18" width="20" height="6" rx="2" fill="currentColor"/>
+                <rect class="m-lvl" x="60" y="29" width="50" height="74" rx="6"/>
+                <path class="m-face" d="M68 54q5-8 10 0M92 54q5-8 10 0"/>
+                <path class="m-mouth" d="M72 68Q85 88 98 68Z"/>
+              </g>
+              <path class="m-spark m-sp1" d="M40 40l-6 10h5l-3 9 9-12h-6z"/>
+              <path class="m-spark m-sp2" d="M128 54l-5 8h4l-2 7 7-10h-5z"/>
+            </g>
+            <g id="mascot-sleeping" hidden>
+              <g class="m-sway">
+                <rect class="m-body" x="55" y="24" width="60" height="84" rx="10"/>
+                <rect x="75" y="18" width="20" height="6" rx="2" fill="currentColor"/>
+                <rect class="m-lvl" x="60" y="29" width="50" height="74" rx="6"/>
+                <path class="m-face" d="M67 54h12M91 54h12"/>
+                <path class="m-face" d="M77 74q8-5 16 0"/>
+              </g>
+              <text class="m-z m-z1" x="118" y="34">z</text>
+              <text class="m-z m-z2" x="124" y="26" style="font-size:30px">Z</text>
+            </g>
+          </svg>
+        </div>
         <h2>Заряд батареї</h2>
         <p class="main-value battery-value"><span id="soc-value">—</span><span class="percent" id="soc-percent" hidden>%</span></p>
         <div class="card-bottom">
@@ -87,7 +116,7 @@
     </section>
 
     <footer class="controls">
-      <span id="update-note">Автоматичне оновлення щохвилини</span>
+      <span id="update-note">Щоб оновити дані, натисніть кнопку вгорі</span>
       <label for="view-mode" id="demo-control">Перегляд
         <select id="view-mode">
           <option value="live">Реальні дані</option>

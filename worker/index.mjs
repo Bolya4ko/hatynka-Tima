@@ -2,7 +2,6 @@ import { DeyeClient } from '../lib/deye.mjs';
 import { publicStatus } from '../lib/public-status.mjs';
 
 const DEFAULT_CACHE_SECONDS = 30;
-const DEFAULT_HISTORY_SECONDS = 30;
 
 function seconds(value, fallback) {
   const number = Number(value);
@@ -55,7 +54,7 @@ export function createHandler({ clientFactory = (settings, options) => new DeyeC
       if (!name) return null;
       settings = { ...base, stationId: requestedStation, stationName: name };
     }
-    const key = JSON.stringify(settings) + '|' + env.HISTORY_CACHE_SECONDS;
+    const key = JSON.stringify(settings);
     let entry = entries.get(settings.stationId);
     if (!entry || entry.key !== key) {
       // Only plain data is kept between requests (answer, token, history). Never a promise: see lib/deye.mjs.
@@ -84,7 +83,7 @@ export function createHandler({ clientFactory = (settings, options) => new DeyeC
 
     try {
       // Every request makes its own call. Parallel misses are rare and the cache above limits the rate.
-      const client = clientFactory(entry.settings, { historyTtlMs: seconds(env.HISTORY_CACHE_SECONDS, DEFAULT_HISTORY_SECONDS) * 1000, shared: entry.shared });
+      const client = clientFactory(entry.settings, { shared: entry.shared });
       const data = await client.dashboard();
       entry.cache = { at: now(), data: publicStatus({ ...data, diagnostics: { ...data.diagnostics, fileCreatedAt: now() } }) };
       return send(env, 200, entry.cache.data, { 'X-Cache': 'MISS', 'X-Cache-Age': '0' });
