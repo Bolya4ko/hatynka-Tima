@@ -148,6 +148,11 @@ function render(data, example = false) {
   // The real charge is the number on the card; the animation only shows the direction.
   $('battery-mascot').style?.setProperty('--lvl', discharging ? '1' : '0.04');
   $('battery-mascot').style?.setProperty('--lvl2', discharging ? '0.04' : '1');
+  restartAnimations([
+    ['grid', grid === 'on', $('grid-anim')],
+    ['gears', gears, $('inverter-anim')],
+    ['mascot', charging ? 'c' : discharging ? 'd' : '', $('battery-mascot')]
+  ]);
   $('battery-mode').textContent = stale ? 'Немає актуальних показників' :
     ({ discharging: 'Розряджається', charging: 'Заряджається', idle: 'У режимі очікування', unknown: 'Стан заряду невідомий' })[data.batteryMode] || 'Стан заряду невідомий';
   $('update-note').textContent = example ? 'Демонстраційні значення для перегляду оформлення' : '';
@@ -164,6 +169,16 @@ function example(mode) {
     batteryMode: mode === 'on' ? 'charging' : ['standby', 'output-off'].includes(mode) ? 'idle' : 'discharging',
     loadWatts: mains || mode === 'output-off' ? 0 : 16800,
     events: { appeared: { at: now - 3600000 }, disappeared: { at: now - 10800000 } } };
+}
+// Mobile browsers sometimes leave CSS animations frozen after an element is shown again: restart them when the scene changes.
+const animationKeys = {};
+function restartAnimations(items) {
+  for (const [name, key, el] of items) {
+    if (animationKeys[name] === key) continue;
+    animationKeys[name] = key;
+    if (!key || !el?.getAnimations) continue;
+    for (const animation of el.getAnimations({ subtree: true })) { animation.cancel(); animation.play(); }
+  }
 }
 async function api() {
   const query = typeof location !== 'undefined' ? new URLSearchParams(location.search) : new URLSearchParams();
