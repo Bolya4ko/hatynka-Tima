@@ -83,7 +83,7 @@ h1 { font-size: clamp(27px, 3.4vw, 42px); line-height: 1.14; letter-spacing: -1.
 .mascot .m-face { fill: none; stroke: #162c42; stroke-width: 3; stroke-linecap: round; }
 .mascot .m-mouth { fill: #162c42; stroke: none; }
 .mascot .m-spark { fill: currentColor; stroke: none; opacity: 0; }
-.mascot .m-z { fill: #5d7388; font-size: 22px; font-weight: 600; opacity: 0; }
+.mascot .m-z { fill: none; stroke: #5d7388; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; opacity: 0; }
 .m-hop, .m-sway { transform-box: fill-box; transform-origin: 50% 100%; }
 .m-hop { animation: m-hop .8s ease-in-out infinite; }
 .m-sway { animation: m-sway 3.2s ease-in-out infinite; }
