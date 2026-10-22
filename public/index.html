@@ -65,7 +65,29 @@
 
       <article class="status-card" id="output-card" data-state="unknown">
         <div class="card-top"><span class="card-index">02 / ІНВЕРТОР</span><span class="status-dot" aria-hidden="true"></span></div>
-        <div class="card-icon"><svg><use href="#i-building"/></svg></div>
+        <div class="card-icon">
+          <svg id="inverter-icon"><use href="#i-building"/></svg>
+          <svg id="inverter-anim" class="ivscene" viewBox="0 18 164 82" aria-hidden="true" hidden>
+            <rect class="iv-body" x="4" y="24" width="62" height="64" rx="9"/>
+            <circle class="iv-fill iv-led" cx="14" cy="34" r="3"/>
+            <g transform="translate(26 63) scale(.7)"><g class="iv-gear">
+              <circle class="iv-fill" r="13"/>
+              <rect class="iv-fill" x="-3.5" y="-21" width="7" height="9" rx="1.5"/><rect class="iv-fill" x="-3.5" y="12" width="7" height="9" rx="1.5"/><rect class="iv-fill" x="-21" y="-3.5" width="9" height="7" rx="1.5"/><rect class="iv-fill" x="12" y="-3.5" width="9" height="7" rx="1.5"/>
+              <g transform="rotate(45)"><rect class="iv-fill" x="-3.5" y="-21" width="7" height="9" rx="1.5"/><rect class="iv-fill" x="-3.5" y="12" width="7" height="9" rx="1.5"/><rect class="iv-fill" x="-21" y="-3.5" width="9" height="7" rx="1.5"/><rect class="iv-fill" x="12" y="-3.5" width="9" height="7" rx="1.5"/></g>
+              <circle class="iv-hole" r="4.5"/>
+            </g></g>
+            <g transform="translate(47 47) scale(.7)"><g class="iv-gear rev">
+              <circle class="iv-fill" r="11"/>
+              <rect class="iv-fill" x="-3" y="-18" width="6" height="8" rx="1.3"/><rect class="iv-fill" x="-3" y="10" width="6" height="8" rx="1.3"/><rect class="iv-fill" x="-18" y="-3" width="8" height="6" rx="1.3"/><rect class="iv-fill" x="10" y="-3" width="8" height="6" rx="1.3"/>
+              <circle class="iv-hole" r="3.5"/>
+            </g></g>
+            <path class="iv-line iv-flow" d="M70 58H98"/>
+            <path class="iv-body iv-roof" d="M100 54L130 30L160 54V90H100Z"/>
+            <rect class="iv-fill iv-win" x="110" y="62" width="10" height="10" rx="1.5"/>
+            <rect class="iv-fill iv-win iv-win2" x="140" y="62" width="10" height="10" rx="1.5"/>
+            <rect class="iv-fill" x="126" y="70" width="8" height="20" rx="1.5" style="opacity:.55"/>
+          </svg>
+        </div>
         <h2>Робота інвертора</h2>
         <p class="main-value output-value" id="output-value">Стан невідомий</p>
         <div class="card-bottom">

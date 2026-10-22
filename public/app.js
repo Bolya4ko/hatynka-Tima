@@ -115,6 +115,10 @@ function render(data, example = false) {
     off: 'Немає напруги на виході',
     unknown: 'Стан невідомий'
   })[operation];
+  // While the house is powered by the inverter the static icon becomes a small animated scene.
+  setHidden($('inverter-icon'), operation === 'supplying');
+  setHidden($('inverter-anim'), operation !== 'supplying');
+  $('output-card').dataset.anim = operation === 'supplying' ? 'on' : '';
   $('load').hidden = operation !== 'supplying';
   const watts = data.loadWatts;
   $('load-value').textContent = watts == null ? '—' :
