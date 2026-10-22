@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { mkdir, readFile, writeFile, copyFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
@@ -29,6 +30,12 @@ export async function buildPages(data, directory = path.join(root, 'dist')) {
   await mkdir(path.join(directory, 'data'), { recursive: true });
   let html = await readFile(path.join(root, 'public/index.html'), 'utf8');
   html = html.replace('name="dashboard-mode" content="local"', 'name="dashboard-mode" content="static"');
+  // Content versions prevent new HTML from using an older cached script or stylesheet.
+  for (const asset of ['app.js', 'styles.css']) {
+    const bytes = await readFile(path.join(root, 'public', asset));
+    const version = createHash('sha256').update(bytes).digest('hex').slice(0, 16);
+    html = html.replace('./' + asset + '"', './' + asset + '?v=' + version + '"');
+  }
   await writeFile(path.join(directory, 'index.html'), html);
   for (const name of ['app.js', 'styles.css', 'favicon.svg', 'iphone-step-1.png', 'iphone-step-2.png', 'iphone-step-3.png'])
     await copyFile(path.join(root, 'public', name), path.join(directory, name));

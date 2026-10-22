@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtemp, readFile, readdir, rm } from 'node:fs/promises';
@@ -24,8 +25,10 @@ test('Pages artifact has relative assets, static mode and no server or secrets',
     await buildPages({ collectedAt: Date.now(), station: { name: 'Test' } }, directory);
     const html = await readFile(path.join(directory, 'index.html'), 'utf8');
     assert.match(html, /name="dashboard-mode" content="static"/);
-    assert.match(html, /src="\.\/app.js"/);
-    assert.match(html, /href="\.\/styles.css"/);
+    const scriptHash = createHash('sha256').update(await readFile(new URL('../public/app.js', import.meta.url))).digest('hex').slice(0, 16);
+    assert.ok(html.includes('src="./app.js?v=' + scriptHash + '"'));
+    const styleHash = createHash('sha256').update(await readFile(new URL('../public/styles.css', import.meta.url))).digest('hex').slice(0, 16);
+    assert.ok(html.includes('href="./styles.css?v=' + styleHash + '"'));
     assert.deepEqual((await readdir(directory)).sort(), ['.nojekyll', 'app.js', 'data', 'favicon.svg', 'index.html', 'styles.css', 'iphone-step-1.png', 'iphone-step-2.png', 'iphone-step-3.png'].sort());
     assert.deepEqual(await readdir(path.join(directory, 'data')), ['status.json']);
     const original = await readFile(new URL('../public/index.html', import.meta.url), 'utf8');
