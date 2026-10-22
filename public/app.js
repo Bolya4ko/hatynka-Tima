@@ -158,6 +158,19 @@ function render(data, example = false) {
   const solarToday = stale ? null : data.solarTodayKwh;
   $('solar-today').hidden = solarToday === null;
   $('solar-today-value').textContent = solarToday === null ? '—' : decimal.format(solarToday);
+  const wattsText = value => value == null ? '—' : decimal.format(Math.abs(value) < 1000 ? value : value / 1000) + (Math.abs(value) < 1000 ? ' Вт' : ' кВт');
+  const kwhText = value => value == null ? '—' : decimal.format(value) + ' кВт·год';
+  const battery = stale ? null : data.batteryWatts, gridWatts = stale ? null : data.gridWatts;
+  $('flow-solar').textContent = 'Сонце → будинок: ' + wattsText(solar);
+  $('flow-battery').textContent = battery === null ? 'Батарея → будинок: —' : (battery >= 0 ? 'Батарея → будинок: ' : 'Сонце / мережа → батарея: ') + wattsText(Math.abs(battery));
+  $('flow-grid').textContent = gridWatts === null ? 'Мережа → будинок: —' : (gridWatts >= 0 ? 'Мережа → будинок: ' : 'Будинок → мережа: ') + wattsText(Math.abs(gridWatts));
+  $('battery-power').textContent = 'Потужність: ' + wattsText(battery);
+  $('battery-electrics').textContent = data.batteryVoltage == null ? 'Напруга / струм: —' : 'Напруга / струм: ' + decimal.format(data.batteryVoltage) + ' В / ' + decimal.format(data.batteryCurrent ?? 0) + ' А';
+  $('battery-day').textContent = 'За день: заряд ' + kwhText(data.dailyChargingKwh) + ', розряд ' + kwhText(data.dailyDischargingKwh);
+  const inputs = (data.pvInputs || []).map((v, i) => 'PV' + (i + 1) + ': ' + wattsText(v)).join(' · ');
+  $('pv-inputs').textContent = inputs ? inputs : 'PV1 · PV2 · PV3: —';
+  $('solar-total').textContent = 'Усього вироблено: ' + kwhText(data.solarTotalKwh);
+  $('energy-day').textContent = 'Мережа за день: взято ' + kwhText(data.dailyGridImportKwh) + ', віддано ' + kwhText(data.dailyGridExportKwh);
   $('update-note').textContent = example ? 'Демонстраційні значення для перегляду оформлення' : '';
   notice(example ? 'Приклад відображення — це не поточні показники будинку.' :
     stale ? 'Дані застаріли або недоступні. Поточний стан живлення невідомий.' :
