@@ -94,7 +94,7 @@ h1 { font-size: clamp(27px, 3.4vw, 42px); line-height: 1.14; letter-spacing: -1.
 @keyframes m-hop { 0%, 100% { transform: translateY(0) scale(1, 1); } 40% { transform: translateY(-7px) scale(.97, 1.04); } 70% { transform: translateY(0) scale(1.04, .95); } }
 @keyframes m-sway { 0%, 100% { transform: rotate(-4deg); } 50% { transform: rotate(4deg); } }
 @keyframes m-blink { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
-@keyframes m-zz { 0% { transform: translate(0, 0); opacity: 0; } 20% { opacity: 1; } 100% { transform: translate(34px, -30px); opacity: 0; } }
+@keyframes m-zz { 0% { transform: translate(0, 0); opacity: 0; } 20% { opacity: 1; } 100% { transform: translate(20px, -22px); opacity: 0; } }
 /* While loading, bouncing bubbles replace the note about the cloud delay */
 @keyframes bubble { 0%, 60%, 100% { transform: translateY(0); opacity: .4; } 30% { transform: translateY(-7px); opacity: 1; } }
 .loading-dots { display: none; align-items: center; gap: 7px; height: 20px; }
