@@ -53,7 +53,14 @@
     <section class="cards" aria-label="Показники електроживлення" aria-live="polite" aria-atomic="true">
       <article class="status-card" id="grid-card" data-state="unknown">
         <div class="card-top"><span class="card-index">01 / МЕРЕЖА</span><span class="status-dot" aria-hidden="true"></span></div>
-        <div class="card-icon"><svg><use href="#i-grid"/></svg></div>
+        <div class="card-icon">
+          <svg id="grid-icon"><use href="#i-grid"/></svg>
+          <svg id="grid-anim" class="gridscene" viewBox="0 0 64 64" aria-hidden="true" hidden>
+            <g class="gw-sway"><path class="gw gw1" d="M15 26Q7 25 0 29M49 26Q57 25 64 29"/></g>
+            <g class="gw-sway gw-b"><path class="gw gw2" d="M10.8 37Q5 37 0 41M53.2 37Q59 37 64 41"/></g>
+            <g transform="translate(4.8 4.8) scale(.85)"><use href="#i-grid"/></g>
+          </svg>
+        </div>
         <h2>Мережа на вході</h2>
         <p class="main-value" id="grid-value">Невідомо</p>
         <div class="card-bottom">

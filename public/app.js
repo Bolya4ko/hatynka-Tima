@@ -95,6 +95,8 @@ function render(data, example = false) {
   $('source-pill').dataset.state = example ? 'demo' : stale ? 'unknown' : 'on';
   $('data-time').textContent = data.collectedAt ? measurementDateLabel(data.collectedAt) : 'Очікуємо дані';
   $('grid-card').dataset.state = grid;
+  setHidden($('grid-icon'), grid === 'on');
+  setHidden($('grid-anim'), grid !== 'on');
   $('grid-value').textContent = ({ on: 'Є', off: 'Немає', unstable: 'Нестабільна', unknown: 'Невідомо' })[grid] || 'Невідомо';
   $('grid-detail').textContent = grid === 'on' ? 'Напруга є на всіх фазах' :
     grid === 'off' ? (data.allPhasesZero ? 'Усі фази: 0 В' : 'Немає вхідної напруги') :
@@ -116,8 +118,9 @@ function render(data, example = false) {
     unknown: 'Стан невідомий'
   })[operation];
   // While the house is powered by the inverter the static icon becomes a small animated scene.
-  setHidden($('inverter-icon'), operation === 'supplying');
-  setHidden($('inverter-anim'), operation !== 'supplying');
+  const gears = operation === 'supplying' || operation === 'charging';
+  setHidden($('inverter-icon'), gears);
+  setHidden($('inverter-anim'), !gears);
   $('load').hidden = operation !== 'supplying';
   const watts = data.loadWatts;
   $('load-value').textContent = watts == null ? '—' :
