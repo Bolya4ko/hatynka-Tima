@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { createHandler } from '../worker/index.mjs';
 
 const env = { DEYE_APP_ID: 'a', DEYE_APP_SECRET: 'SECRET-VALUE', DEYE_LOGIN: 'l', DEYE_PASSWORD: 'PASSWORD-VALUE', DEYE_STATION_ID: '1', CACHE_SECONDS: '30' };
-const sample = { station: { name: 'Чавдар 13' }, collectedAt: 1000, grid: 'off', output: 'on', soc: 72, batteryMode: 'discharging', diagnostics: {}, token: 'LEAK' };
+const sample = { station: { name: 'Мій дім' }, collectedAt: 1000, grid: 'off', output: 'on', soc: 72, batteryMode: 'discharging', diagnostics: {}, token: 'LEAK' };
 const get = (handle, path = '/api/status', e = env) => handle(new Request('https://w.example' + path), e);
 
 test('worker caches the answer and refreshes after the cache time', async () => {
@@ -52,7 +52,7 @@ test('worker opens another station only from the allowed list; default stays the
   const seen = [];
   const handle = createHandler({ clientFactory: settings => ({ dashboard: async () => { seen.push(settings.stationId); return { ...sample, station: { name: settings.stationName } }; } }) });
   const withList = { ...env, ALLOWED_STATION_IDS: '2:Друга станція' };
-  assert.equal((await (await get(handle, '/api/status', withList)).json()).station.name, 'Чавдар 13');
+  assert.equal((await (await get(handle, '/api/status', withList)).json()).station.name, 'Мій дім');
   assert.equal((await (await get(handle, '/api/status?station=2', withList)).json()).station.name, 'Друга станція');
   assert.equal((await get(handle, '/api/status?station=999', withList)).status, 403);
   assert.deepEqual(seen, ['1', '2']);

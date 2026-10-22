@@ -1,15 +1,16 @@
 {
-  "name": "c13-power-dashboard",
+  "name": "deye-power-dashboard",
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Power dashboard for Chavdar 13: static page plus Cloudflare Worker for Deye Cloud",
+  "description": "Personal power dashboard: static page plus Cloudflare Worker for Deye Cloud",
   "engines": {
     "node": ">=22"
   },
   "scripts": {
     "test": "node --test tests/*.test.mjs",
     "worker:dev": "wrangler dev",
+    "worker:local": "node tools/local-worker.mjs",
     "worker:deploy": "wrangler deploy",
     "build": "node tools/build-pages.mjs"
   }

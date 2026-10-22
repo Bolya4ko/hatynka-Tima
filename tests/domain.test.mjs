@@ -30,11 +30,12 @@ test('fresh inverter overrides older station battery, stale hides all live state
   const now = Date.parse('2026-10-21T15:34:30+03:00');
   const device = { collectionTime: now / 1000, dataList: Object.entries({
     ...off, LoadVoltageL1: 231, LoadVoltageL2: 233, LoadVoltageL3: 232,
-    SOC: 60, BatteryPower: 15000, UPSLoadPower: 16833
+    SOC: 60, BatteryPower: 15000, UPSLoadPower: 16833, DCPowerPV1: 2100, DCPowerPV2: 1850, PVDailyPowerGenerationActive: 14.6
   }).map(([key, value]) => ({ key, value })) };
   const data = summarize({ id: '1', name: 'Test' }, { batterySOC: 61 }, [device], now);
   assert.equal(data.grid, 'off'); assert.equal(data.output, 'on');
   assert.equal(data.soc, 60); assert.equal(data.loadWatts, 16833);
+  assert.equal(data.solarWatts, 3950); assert.equal(data.solarTodayKwh, 14.6);
   assert.equal(data.batteryMode, 'discharging');
   assert.equal(summarize({}, {}, [device], now + 59 * 60000).stale, false);
   assert.equal(summarize({}, {}, [device], now + 60 * 60000).stale, false);

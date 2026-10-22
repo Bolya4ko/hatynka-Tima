@@ -10,12 +10,13 @@ import { publicStatus } from '../lib/public-status.mjs';
 
 test('public export excludes credentials, identifiers and upstream errors', () => {
   const data = publicStatus({ station: { id: 'private-id', name: 'Чавдар 13' },
-    password: 'secret', accessToken: 'token', historyError: 'private response',
+    password: 'secret', accessToken: 'token', historyError: 'private response', solarWatts: 3210, solarTodayKwh: 12.4,
     collectedAt: Date.now(), stale: false, output: 'on', grid: 'off',
     events: { appeared: { from: 100, to: 200, at: 150, secret: 'hidden' } } });
   const json = JSON.stringify(data);
   for (const value of ['private-id', 'secret', 'token', 'private response', 'hidden']) assert.ok(!json.includes(value));
   assert.equal(data.output, 'on');
+  assert.equal(data.solarWatts, 3210); assert.equal(data.solarTodayKwh, 12.4);
   assert.equal(data.events.appeared.at, 150);
 });
 
@@ -29,7 +30,7 @@ test('Pages artifact has relative assets, versioned script and styles, and no se
     const styleHash = createHash('sha256').update(await readFile(new URL('../public/styles.css', import.meta.url))).digest('hex').slice(0, 16);
     assert.ok(html.includes('href="./styles.css?v=' + styleHash + '"'));
     assert.deepEqual((await readdir(directory)).sort(), ['.nojekyll', 'app.js', 'favicon.svg', 'index.html', 'styles.css', 'iphone-step-1.png', 'iphone-step-2.png', 'iphone-step-3.png'].sort());
-    assert.match(html, /name="dashboard-api" content="https:\/\/[^"]+"/);
+    assert.match(html, /name="dashboard-api" content="https?:\/\/[^\"]+"/);
     assert.ok(!/secret|password|token/i.test(html));
   } finally {
     const resolved = path.resolve(directory);

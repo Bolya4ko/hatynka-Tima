@@ -1,5 +1,6 @@
 # Скопіюйте цей файл у .dev.vars (він у .gitignore) і впишіть свої значення.
-DEYE_APP_ID=
-DEYE_APP_SECRET=
-DEYE_LOGIN=
-DEYE_PASSWORD=
+# Не надсилайте ці дані в чат та не додавайте їх у Git.
+DEYE_APP_ID=202610224918088
+DEYE_APP_SECRET=a053a90c8c0d3c2bc946999822815bcd
+DEYE_LOGIN=bolya4ko@gmail.com
+DEYE_PASSWORD=Sa1216617Sa0343

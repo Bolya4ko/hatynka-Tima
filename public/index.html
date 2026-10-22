@@ -2,11 +2,11 @@
 <html lang="uk">
 <head>
   <meta charset="utf-8">
-  <meta name="dashboard-api" content="https://c13-power.sergeymaximenko.workers.dev">
+  <meta name="dashboard-api" content="http://127.0.0.1:8787">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f3f7fa">
-  <meta name="description" content="Електроживлення Чавдар 13: мережа, вихід інвертора та заряд батареї.">
-  <title>Чавдар 13 · Електроживлення</title>
+  <meta name="description" content="Електроживлення: мережа, сонячна генерація, інвертор та батарея.">
+  <title>Мій дім · Електроживлення</title>
   <link rel="icon" href="./favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="./styles.css">
   <script src="./app.js" defer></script>
@@ -19,6 +19,7 @@
     <symbol id="i-building" viewBox="0 0 64 64">
       <path d="M7 57V15h29v42M12 15V8h19v7M3 57h38M20 57V44h8v13M15 24h3m9 0h3m-15 9h3m9 0h3M46 22v10m10-10v10M43 32h16v5a8 8 0 0 1-16 0zM51 45v6a6 6 0 0 1-6 6h-4"/>
     </symbol>
+    <symbol id="i-solar" viewBox="0 0 64 64"><circle cx="32" cy="17" r="8"/><path d="M32 3v5M32 26v5M18 17h5M41 17h5M22 7l4 4M38 23l4 4M42 7l-4 4M26 23l-4 4M12 38h40l-5 20H17zM17 45h30M25 38l-2 20M39 38l2 20"/></symbol>
     <symbol id="i-battery" viewBox="0 0 64 64">
       <rect x="7" y="17" width="46" height="30" rx="6"/><path d="M57 26v12"/>
       <path d="m33 23-9 11h9l-3 8"/>
@@ -31,10 +32,10 @@
   <main class="dashboard">
     <header class="header">
       <div class="identity">
-        <div class="brandmark" aria-hidden="true">13<span>POWER</span></div>
+        <div class="brandmark" aria-hidden="true">DEYE<span>POWER</span></div>
         <div>
-          <p class="eyebrow">C13 POWER DASHBOARD</p>
-          <h1 id="station-name">Чавдар 13</h1>
+          <p class="eyebrow">DEYE POWER DASHBOARD</p>
+          <h1 id="station-name">Мій дім</h1>
           <p class="subtitle">Електроживлення будинку</p>
         </div>
       </div>
@@ -95,8 +96,18 @@
         </div>
       </article>
 
+      <article class="status-card solar-card" id="solar-card" data-state="unknown">
+        <div class="card-top"><span class="card-index">03 / СОНЦЕ</span><span class="status-dot" aria-hidden="true"></span></div>
+        <div class="card-icon"><svg><use href="#i-solar"/></svg></div>
+        <h2>Сонячна генерація</h2>
+        <p class="main-value"><span id="solar-value">—</span><span class="solar-unit" id="solar-unit">кВт</span></p>
+        <div class="card-bottom">
+          <p class="secondary" id="solar-detail">Очікуємо показники</p>
+          <p class="solar-today" id="solar-today" hidden>За сьогодні: <strong id="solar-today-value">—</strong> кВт·год</p>
+        </div>
+      </article>
       <article class="status-card battery-card" id="battery-card" data-state="unknown">
-        <div class="card-top"><span class="card-index">03 / БАТАРЕЯ</span><span class="status-dot" aria-hidden="true"></span></div>
+        <div class="card-top"><span class="card-index">04 / БАТАРЕЯ</span><span class="status-dot" aria-hidden="true"></span></div>
         <div class="card-icon">
           <svg id="battery-icon"><use href="#i-battery"/></svg>
           <svg id="battery-mascot" class="mascot" viewBox="34 -4 116 124" aria-hidden="true" hidden>
@@ -154,10 +165,10 @@
   </main>
   <dialog id="install-help" aria-labelledby="install-help-title">
     <div class="dialog-heading">
-      <div><p class="eyebrow">ЗАВЖДИ ПІД РУКОЮ</p><h2 id="install-help-title">Додайте «Чавдар 13» на iPhone</h2></div>
+      <div><p class="eyebrow">ЗАВЖДИ ПІД РУКОЮ</p><h2 id="install-help-title">Додайте «Мій дім» на iPhone</h2></div>
       <button class="close-button" id="close-install-help" aria-label="Закрити інструкцію" autofocus>×</button>
     </div>
-    <p class="dialog-intro">Відкрийте <a href="https://sergeymaximenko.github.io/C13PowerDashboard/" target="_blank" rel="noopener">дашборд у Safari</a>. Потім натисніть виділені кнопки.</p>
+    <p class="dialog-intro">Відкрийте <a href="./" target="_blank" rel="noopener">дашборд у Safari</a>. Потім натисніть виділені кнопки.</p>
     <ol class="install-steps">
       <li>
         <h3><span>1</span> Відкрийте меню «…»</h3>
@@ -184,7 +195,7 @@
         </figure>
       </li>
     </ol>
-    <p class="install-finish"><strong>Завершення:</strong> залиште назву «Чавдар 13» і натисніть <strong>«Додати»</strong>. Якщо є перемикач «Відкривати як вебзастосунок», увімкніть його.</p>
+    <p class="install-finish"><strong>Завершення:</strong> залиште назву «Мій дім» і натисніть <strong>«Додати»</strong>. Якщо є перемикач «Відкривати як вебзастосунок», увімкніть його.</p>
     <p class="secondary">На початковому екрані з’явиться значок дашборда. Для свіжих показників потрібен інтернет.</p>
   </dialog>
 </body>

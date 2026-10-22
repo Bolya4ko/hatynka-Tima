@@ -3,6 +3,15 @@ import { publicStatus } from '../lib/public-status.mjs';
 
 const DEFAULT_CACHE_SECONDS = 30;
 
+function safeDiagnostic(error, env) {
+  let message = String(error?.message || 'unknown error');
+  for (const key of ['DEYE_APP_SECRET', 'DEYE_LOGIN', 'DEYE_PASSWORD']) {
+    const secret = String(env[key] || '');
+    if (secret) message = message.split(secret).join('[приховано]');
+  }
+  return message.replace(/Bearer\s+[A-Za-z0-9._-]+/gi, 'Bearer [приховано]').slice(0, 500);
+}
+
 function seconds(value, fallback) {
   const number = Number(value);
   return Number.isFinite(number) && number >= 0 ? number : fallback;
@@ -15,7 +24,7 @@ export function settingsFromEnv(env) {
     if (!String(env[name] ?? '').trim()) throw new Error('Missing configuration: ' + name);
     settings[key] = String(env[name]);
   }
-  settings.stationName = env.DEYE_STATION_NAME || 'Чавдар 13';
+  settings.stationName = env.DEYE_STATION_NAME || 'Мій дім';
   return settings;
 }
 // ALLOWED_STATION_IDS: "61167187:Моя станція,12345" — станції, які можна відкрити через ?station=ID.
@@ -87,7 +96,9 @@ export function createHandler({ clientFactory = (settings, options) => new DeyeC
       const data = await client.dashboard();
       entry.cache = { at: now(), data: publicStatus({ ...data, diagnostics: { ...data.diagnostics, fileCreatedAt: now() } }) };
       return send(env, 200, entry.cache.data, { 'X-Cache': 'MISS', 'X-Cache-Age': '0' });
-    } catch {
+    } catch (error) {
+      // The browser receives no upstream details. The local Worker log has a redacted reason for setup diagnostics.
+      console.error('Deye dashboard fetch failed:', safeDiagnostic(error, env));
       // Keep serving the last good answer: the page itself marks old measurements as stale.
       if (entry.cache) return send(env, 200, entry.cache.data, { 'X-Cache': 'STALE', 'X-Cache-Age': String(Math.round((now() - entry.cache.at) / 1000)) });
       return send(env, 502, { error: 'Не вдалося отримати дані Deye.' });

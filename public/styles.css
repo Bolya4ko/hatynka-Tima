@@ -109,7 +109,7 @@ h1 { font-size: clamp(27px, 3.4vw, 42px); line-height: 1.14; letter-spacing: -1.
 .freshness-note { padding-left: 24px; border-left: 1px solid #c5d8ea; font-size: 13px; }
 .freshness-note svg { width: 21px; }
 .notice { padding: 14px 18px; border: 1px solid #ead5b1; color: #79551d; background: #fffaed; border-radius: 12px; margin: -9px 0 22px; line-height: 1.5; font-size: 14px; }
-.cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+.cards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; }
 .status-card { --accent: #708397; --tint: #f0f3f6; position: relative; min-height: 388px; padding: 26px 30px 28px; border-radius: 22px; border: 1px solid #e0e8ee; background: linear-gradient(150deg, #fff 35%, var(--tint)); box-shadow: 0 10px 26px #1c3c5510; overflow: hidden; display: flex; flex-direction: column; }
 .status-card[data-state="on"] { --accent: var(--green); --tint: #ecf8f3; }
 .status-card[data-state="off"] { --accent: var(--red); --tint: #fdf0f1; }
@@ -151,7 +151,7 @@ dialog::backdrop { background: #14273e60; backdrop-filter: blur(5px); }
   .dashboard { padding: 36px 28px; }
   .freshness-note { padding-left: 0; border-left: 0; }
   .freshness { gap: 12px; }
-  .cards { gap: 14px; }
+  .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
   .status-card { padding: 22px; }
   h2 { font-size: 18px; }
   .event-time { font-size: 15px; }
@@ -280,3 +280,9 @@ dialog::backdrop { background: #14273e60; backdrop-filter: blur(5px); }
   background: var(--tint); color: var(--accent); font-size: 13px;
   line-height: 1.45; font-weight: 600; font-variant-numeric: tabular-nums;
 }
+
+.solar-card[data-state="on"] { --accent: #d69211; --tint: #fff8e6; }
+.solar-card .card-icon { color: #d69211; }
+.solar-unit { font-size: 20px; margin-left: 6px; color: var(--accent); font-weight: 650; }
+.solar-today { margin: 11px 0 0; color: #557082; font-size: 13px; }
+.solar-today strong { color: #24445a; font-size: 17px; }

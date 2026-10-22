@@ -90,7 +90,7 @@ function render(data, example = false) {
   const grid = stale ? 'unknown' : data.grid;
   const output = stale ? 'unknown' : data.output;
   const soc = stale ? null : data.soc;
-  $('station-name').textContent = data.station?.name || 'Чавдар 13';
+  $('station-name').textContent = data.station?.name || 'Мій дім';
   $('source-text').textContent = example ? 'Демонстрація' : stale ? 'Немає свіжих даних' : 'Deye Cloud';
   $('source-pill').dataset.state = example ? 'demo' : stale ? 'unknown' : 'on';
   $('data-time').textContent = data.collectedAt ? measurementDateLabel(data.collectedAt) : 'Очікуємо дані';
@@ -149,6 +149,15 @@ function render(data, example = false) {
   $('battery-mascot').dataset.dir = discharging ? 'down' : 'up';
   $('battery-mode').textContent = stale ? 'Немає актуальних показників' :
     ({ discharging: 'Розряджається', charging: 'Заряджається', idle: 'У режимі очікування', unknown: 'Стан заряду невідомий' })[data.batteryMode] || 'Стан заряду невідомий';
+  const solar = stale ? null : data.solarWatts;
+  $('solar-card').dataset.state = solar === null ? 'unknown' : 'on';
+  $('solar-value').textContent = solar === null ? '—' : decimal.format(solar < 1000 ? solar : solar / 1000);
+  $('solar-unit').textContent = solar !== null && solar < 1000 ? 'Вт' : 'кВт';
+  $('solar-detail').textContent = solar === null ? 'Немає актуальних показників' :
+    solar === 0 ? 'Сонячної генерації зараз немає' : 'Потужність від панелей зараз';
+  const solarToday = stale ? null : data.solarTodayKwh;
+  $('solar-today').hidden = solarToday === null;
+  $('solar-today-value').textContent = solarToday === null ? '—' : decimal.format(solarToday);
   $('update-note').textContent = example ? 'Демонстраційні значення для перегляду оформлення' : '';
   notice(example ? 'Приклад відображення — це не поточні показники будинку.' :
     stale ? 'Дані застаріли або недоступні. Поточний стан живлення невідомий.' :
@@ -157,11 +166,12 @@ function render(data, example = false) {
 function example(mode) {
   const now = Date.now();
   const mains = mode === 'on' || mode === 'standby';
-  return { station: { name: 'Чавдар 13' }, collectedAt: now - (mode === 'stale' ? 3660000 : 300000),
+  return { station: { name: 'Мій дім' }, collectedAt: now - (mode === 'stale' ? 3660000 : 300000),
     stale: mode === 'stale', grid: mains ? 'on' : 'off', output: mode === 'output-off' ? 'off' : 'on',
     allPhasesZero: !mains, soc: mode === 'on' ? 82 : mode === 'standby' ? 100 : mode === 'output-off' ? 10 : 61,
     batteryMode: mode === 'on' ? 'charging' : ['standby', 'output-off'].includes(mode) ? 'idle' : 'discharging',
     loadWatts: mains || mode === 'output-off' ? 0 : 16800,
+    solarWatts: mode === 'stale' ? null : mains ? 2450 : 0, solarTodayKwh: mode === 'stale' ? null : 12.7,
     events: { appeared: { at: now - 3600000 }, disappeared: { at: now - 10800000 } } };
 }
 async function api() {
