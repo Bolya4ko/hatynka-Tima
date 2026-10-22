@@ -44,23 +44,11 @@ h1 { font-size: clamp(27px, 3.4vw, 42px); line-height: 1.14; letter-spacing: -1.
 .cards.skeleton .card-icon svg { animation: pulse 1.4s ease-in-out infinite; }
 /* Inverter at work: gears turn inside, energy pulses run to the house, its windows glow. */
 .card-icon .ivscene { width: 100%; height: 100%; stroke-width: 0; overflow: visible; }
-.ivscene .iv-fill { fill: currentColor; stroke: none; }
-.ivscene .iv-hole { fill: var(--tint); stroke: none; }
-.ivscene .iv-body { fill: #fff; stroke: currentColor; stroke-width: 3; stroke-linejoin: round; }
-.ivscene .iv-line { fill: none; stroke: currentColor; stroke-width: 3; stroke-linecap: round; }
+.iv-fill { fill: currentColor; stroke: none; }
+.iv-hole { fill: var(--tint); stroke: none; }
 .iv-gear { transform-box: fill-box; transform-origin: center; animation: iv-spin 6s linear infinite; }
 .iv-gear.rev { animation-duration: 4.2s; animation-direction: reverse; }
-.iv-flow { stroke-dasharray: 5 7; animation: iv-flow .9s linear infinite; }
-.iv-led { animation: iv-blink 1.2s ease-in-out infinite; }
-.iv-win { animation: iv-glow 1.8s ease-in-out infinite; }
-.iv-win2 { animation-delay: .9s; }
 @keyframes iv-spin { to { transform: rotate(360deg); } }
-@keyframes iv-flow { to { stroke-dashoffset: -24; } }
-@keyframes iv-blink { 0%, 100% { opacity: 1; } 50% { opacity: .2; } }
-@keyframes iv-glow { 0%, 100% { opacity: .25; } 50% { opacity: 1; } }
-#output-card[data-anim="on"] .card-icon { width: 180px; height: 106px; margin: 14px 0 12px; padding: 12px 16px; }
-@media (max-width: 760px) { #output-card[data-anim="on"] .card-icon { width: 73px; height: 73px; margin: 0; padding: 7px 5px; } }
-@media (max-width: 350px) { #output-card[data-anim="on"] .card-icon { width: 54px; height: 60px; } }
 /* Battery character: happy while charging, sleepy while discharging. Level = real charge (--lvl). */
 .card-icon .mascot { width: 100%; height: 100%; stroke-width: 0; overflow: visible; }
 .mascot rect, .mascot text { stroke: none; }
@@ -77,9 +65,6 @@ h1 { font-size: clamp(27px, 3.4vw, 42px); line-height: 1.14; letter-spacing: -1.
   91% { transform: scaleY(var(--lvl, .5)); opacity: 0; }
   100% { transform: scaleY(var(--lvl, .5)); opacity: .4; }
 }
-.battery-card[data-mascot="on"] .card-icon { width: 118px; height: 118px; margin: 10px 0 8px; }
-@media (max-width: 760px) { .battery-card[data-mascot="on"] .card-icon { width: 73px; height: 73px; margin: 0; } }
-@media (max-width: 350px) { .battery-card[data-mascot="on"] .card-icon { width: 54px; height: 60px; } }
 .mascot .m-face { fill: none; stroke: #162c42; stroke-width: 3; stroke-linecap: round; }
 .mascot .m-mouth { fill: #162c42; stroke: none; }
 .mascot .m-spark { fill: currentColor; stroke: none; opacity: 0; }
@@ -117,8 +102,8 @@ h1 { font-size: clamp(27px, 3.4vw, 42px); line-height: 1.14; letter-spacing: -1.
 .card-top { display: flex; justify-content: space-between; align-items: center; }
 .card-index { color: #8a9aa8; font-weight: 650; font-size: 10px; letter-spacing: 1.7px; }
 .status-dot { height: 7px; width: 7px; border-radius: 100%; background: var(--accent); box-shadow: 0 0 0 5px var(--tint); }
-.card-icon { display: inline-flex; align-items: center; justify-content: center; width: 76px; height: 76px; border-radius: 23px; background: var(--tint); color: var(--accent); margin: 23px 0 21px; }
-.card-icon svg { height: 53px; width: 53px; stroke-width: 2; }
+.card-icon { display: inline-flex; align-items: center; justify-content: center; width: 104px; height: 104px; border-radius: 28px; background: var(--tint); color: var(--accent); margin: 14px 0 12px; }
+.card-icon svg { height: 70px; width: 70px; stroke-width: 2; }
 h2 { font-size: 20px; line-height: 1.25; font-weight: 650; letter-spacing: -.4px; margin: 0; }
 .main-value { font-size: clamp(36px, 4.5vw, 59px); font-weight: 730; letter-spacing: -2.4px; color: var(--accent); line-height: 1.15; margin: 10px 0 23px; }
 .output-value { font-size: clamp(29px, 3.4vw, 44px); letter-spacing: -1.7px; margin-top: 19px; }
@@ -174,7 +159,8 @@ dialog::backdrop { background: #14273e60; backdrop-filter: blur(5px); }
   .cards { grid-template-columns: 1fr; gap: 15px; }
   .status-card { display: grid; grid-template-columns: 73px minmax(0,1fr); column-gap: 19px; min-height: 225px; padding: 23px; border-radius: 19px; align-content: start; }
   .card-top { grid-column: 1 / -1; margin-bottom: 24px; }
-  .card-icon { grid-column: 1; grid-row: 2 / span 3; margin: 0; width: 73px; height: 73px; border-radius: 21px; }
+  .card-icon { grid-column: 1; grid-row: 2 / span 3; margin: 0; width: 88px; height: 88px; border-radius: 24px; }
+  .card-icon svg { width: 60px; height: 60px; }
   h2 { grid-column: 2; font-size: 18px; }
   .main-value { grid-column: 2; font-size: 46px; margin: 7px 0 13px; }
   .output-value { font-size: 32px; letter-spacing: -1.2px; margin: 12px 0 15px; }
@@ -193,8 +179,8 @@ dialog::backdrop { background: #14273e60; backdrop-filter: blur(5px); }
 @media (max-width: 350px) {
   .dashboard { padding: 20px 12px; }
   .status-card { grid-template-columns: 54px minmax(0,1fr); gap: 0 14px; padding: 18px; }
-  .card-icon { width: 54px; height: 60px; }
-  .card-icon svg { width: 42px; height: 42px; }
+  .card-icon { width: 68px; height: 68px; }
+  .card-icon svg { width: 48px; height: 48px; }
   .output-value { font-size: 27px; }
   h2 { font-size: 17px; }
   .event-time { font-size: 13px; }

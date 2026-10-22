@@ -118,7 +118,6 @@ function render(data, example = false) {
   // While the house is powered by the inverter the static icon becomes a small animated scene.
   setHidden($('inverter-icon'), operation === 'supplying');
   setHidden($('inverter-anim'), operation !== 'supplying');
-  $('output-card').dataset.anim = operation === 'supplying' ? 'on' : '';
   $('load').hidden = operation !== 'supplying';
   const watts = data.loadWatts;
   $('load-value').textContent = watts == null ? '—' :
@@ -148,7 +147,7 @@ function render(data, example = false) {
   $('battery-mascot').style?.setProperty('--lvl2', discharging ? '0.04' : '1');
   $('battery-mode').textContent = stale ? 'Немає актуальних показників' :
     ({ discharging: 'Розряджається', charging: 'Заряджається', idle: 'У режимі очікування', unknown: 'Стан заряду невідомий' })[data.batteryMode] || 'Стан заряду невідомий';
-  $('update-note').textContent = example ? 'Демонстраційні значення для перегляду оформлення' : 'Щоб оновити дані, натисніть кнопку вгорі';
+  $('update-note').textContent = example ? 'Демонстраційні значення для перегляду оформлення' : '';
   notice(example ? 'Приклад відображення — це не поточні показники будинку.' :
     stale ? 'Дані застаріли або недоступні. Поточний стан живлення невідомий.' :
     '');
