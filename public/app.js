@@ -1,16 +1,20 @@
 'use strict';
-const staticMode = document.querySelector('meta[name="dashboard-mode"]')?.content === 'static';
 const $ = id => document.getElementById(id);
 const clock = new Intl.DateTimeFormat('uk-UA', { timeZone: 'Europe/Kyiv', hour: '2-digit', minute: '2-digit' });
 const date = new Intl.DateTimeFormat('uk-UA', { timeZone: 'Europe/Kyiv', day: '2-digit', month: '2-digit' });
 const decimal = new Intl.NumberFormat('uk-UA', { maximumFractionDigits: 1 });
-let config = null, snapshot = null, loading = false, requestVersion = 0;
+let snapshot = null, loading = false, requestVersion = 0;
 let displayedMeasurementTime = null;
 let displayedGridEvent = null;
 const isExample = () => $('view-mode').value !== 'live';
+// First load: grey bars in the cards and bouncing bubbles instead of the cloud-delay note.
+function setLoading(on) {
+  document.querySelector('.cards')?.classList.toggle('skeleton', on);
+  document.querySelector('.freshness')?.classList.toggle('loading', on);
+}
 function notice(text) { $('notice').textContent = text; $('notice').hidden = !text; }
 function unknown(message) {
-  render({ station: config?.station, stale: true, collectedAt: snapshot?.collectedAt, grid: 'unknown', output: 'unknown', soc: null, events: {} });
+  render({ station: snapshot?.station, stale: true, collectedAt: snapshot?.collectedAt, grid: 'unknown', output: 'unknown', soc: null, events: {} });
   notice(message);
 }
 function inverterState(data, stale) {
@@ -122,7 +126,7 @@ function render(data, example = false) {
   $('battery-progress').value = soc ?? 0;
   $('battery-mode').textContent = stale ? 'Немає актуальних показників' :
     ({ discharging: 'Розряджається', charging: 'Заряджається', idle: 'У режимі очікування', unknown: 'Стан заряду невідомий' })[data.batteryMode] || 'Стан заряду невідомий';
-  $('update-note').textContent = example ? 'Демонстраційні значення для перегляду оформлення' : (staticMode ? 'Перевірка файлу щохвилини · оновлення через GitHub Actions' : 'Автоматичне оновлення щохвилини');
+  $('update-note').textContent = example ? 'Демонстраційні значення для перегляду оформлення' : 'Автоматичне оновлення щохвилини';
   notice(example ? 'Приклад відображення — це не поточні показники будинку.' :
     stale ? 'Дані застаріли або недоступні. Поточний стан живлення невідомий.' :
     '');
@@ -137,180 +141,69 @@ function example(mode) {
     loadWatts: mains || mode === 'output-off' ? 0 : 16800,
     events: { appeared: { at: now - 3600000 }, disappeared: { at: now - 10800000 } } };
 }
-const diagnostic = { startedAt: null, receivedAt: null, http: null, headers: {}, data: null, error: '', records: [], loaded: false };
-function diagnosticTime(value) {
-  return Number.isFinite(value) && value > 0 ? new Intl.DateTimeFormat('uk-UA', {
-    timeZone: 'Europe/Kyiv', day: '2-digit', month: '2-digit', year: 'numeric',
-    hour: '2-digit', minute: '2-digit', second: '2-digit'
-  }).format(value) : 'немає інформації';
-}
-function diagnosticDuration(start, end) {
-  if (!Number.isFinite(start) || !Number.isFinite(end)) return 'немає інформації';
-  const s = Math.round((end - start) / 1000);
-  return (s < 0 ? '−' : '') + Math.floor(Math.abs(s) / 60) + ' хв. ' + Math.abs(s) % 60 + ' с.';
-}
-function recordDiagnostic(data, error = '') {
-  if (!diagnostic.loaded) {
-    diagnostic.loaded = true;
-    try {
-      const saved = JSON.parse(sessionStorage.getItem('c13-diagnostics-v1'));
-      if (Array.isArray(saved)) diagnostic.records = saved.filter(r =>
-        r && Number.isFinite(r.at) && (r.measured === null || Number.isFinite(r.measured)) &&
-        (r.previous === null || Number.isFinite(r.previous)) &&
-        (r.created === null || Number.isFinite(r.created)) && typeof r.failed === 'boolean').slice(-12);
-    } catch {}
+async function api() {
+  const query = typeof location !== 'undefined' ? new URLSearchParams(location.search) : new URLSearchParams();
+  // For testing: ?api=http://127.0.0.1:8787 reads from a Worker running on this computer (wrangler dev). Only localhost is allowed.
+  const local = query.get('api');
+  const apiUrl = local && /^http:\/\/(localhost|127\.0\.0\.1)(:\d{1,5})?$/.test(local) ? local
+    : document.querySelector('meta[name="dashboard-api"]')?.content?.trim();
+  if (!apiUrl) throw new Error('Не вказано адресу джерела даних.');
+  const source = new URL('/api/status', apiUrl);
+  // Optional: ?station=ID opens another station from the Worker's allowed list. Default: the main station.
+  const station = query.get('station');
+  if (station && /^\d{1,20}$/.test(station)) source.searchParams.set('station', station);
+  let response;
+  try { response = await fetch(source, { cache: 'no-store', signal: AbortSignal.timeout(45000) }); }
+  catch (error) {
+    throw new Error(error?.name === 'TimeoutError' ? 'Сервер не відповів вчасно. Спробуємо ще раз.' : 'Немає зв’язку із сервером даних. Перевірте інтернет.');
   }
-  const previous = [...diagnostic.records].reverse().find(r => !r.failed)?.measured ?? null;
-  diagnostic.receivedAt = Date.now();
-  diagnostic.data = data;
-  diagnostic.error = error;
-  diagnostic.records.push({ at: diagnostic.receivedAt, measured: data?.collectedAt ?? null,
-    created: data?.diagnostics?.fileCreatedAt ?? null, previous, failed: !!error });
-  diagnostic.records = diagnostic.records.slice(-12);
-  try { sessionStorage.setItem('c13-diagnostics-v1', JSON.stringify(diagnostic.records)); } catch {}
-  updateDiagnostics();
-}
-function updateDiagnostics() {
-  const d = diagnostic.data, t = d?.diagnostics || {};
-  const rows = [
-    'Режим: ' + (staticMode ? 'GitHub Pages' : 'Локальний сервер') + (isExample() ? ' · на екрані приклад; звіт про реальні дані' : ''),
-    'Годинник пристрою: ' + diagnosticTime(Date.now()),
-    'Вимірювання на екрані: ' + diagnosticTime(displayedMeasurementTime),
-    '', '1. ЧАС У ДЖЕРЕЛІ',
-    'Вимірювання інвертора (device/latest): ' + diagnosticTime(d?.collectedAt),
-    'Оновлення станції (station/latest): ' + diagnosticTime(t.stationUpdatedAt),
-    '', '2. ОТРИМАННЯ ТА ПІДГОТОВКА',
-    'Початок запиту до Deye: ' + diagnosticTime(t.requestStartedAt),
-    'Поточні показники отримано: ' + diagnosticTime(t.latestReceivedAt),
-    'Обробку з історією завершено: ' + diagnosticTime(t.completedAt),
-    'JSON підготовлено: ' + diagnosticTime(t.fileCreatedAt),
-    'Вік вимірювання при отриманні: ' + diagnosticDuration(d?.collectedAt, t.latestReceivedAt),
-    'Запит поточних показників: ' + diagnosticDuration(t.requestStartedAt, t.latestReceivedAt),
-    'Очікування історії / обробка: ' + diagnosticDuration(t.latestReceivedAt, t.completedAt),
-    '', '3. ПЕРЕВІРКА СТОРІНКОЮ',
-    'Запит сторінки почався: ' + diagnosticTime(diagnostic.startedAt),
-    'Відповідь отримано: ' + diagnosticTime(diagnostic.receivedAt),
-    'Тривалість запиту: ' + diagnosticDuration(diagnostic.startedAt, diagnostic.receivedAt),
-    'Від підготовки JSON до отримання: ' + diagnosticDuration(t.fileCreatedAt, diagnostic.receivedAt),
-    'HTTP: ' + (diagnostic.http ?? '—'),
-    'Дата HTTP-відповіді: ' + (diagnostic.headers.date || 'не надано'),
-    'Age кешу (секунди): ' + (diagnostic.headers.age || 'не надано'),
-    'Last-Modified: ' + (diagnostic.headers.modified || 'не надано'),
-    'ETag: ' + (diagnostic.headers.etag || 'не надано'),
-    'Результат: ' + (diagnostic.error || (d ? 'Дані отримано' : 'Очікуємо перевірку')),
-    'Історія: ' + (d?.historyAvailable ? 'отримана' : 'недоступна або ще не перевірена'),
-    '', 'Час публікації тут невідомий. Інтервал від JSON до браузера включає публікацію, очікування перевірки та кеш; це не чиста тривалість публікації.',
-    'Годинник пристрою впливає на розраховані затримки.'
-  ];
-  if (Number.isSafeInteger(t.runId) && t.runId > 0) rows.push('Запуск Actions (спроба ' + (t.runAttempt || '?') + '): https://github.com/SergeyMaximenko/C13PowerDashboard/actions/runs/' + t.runId);
-  rows.push('', 'ОСТАННІ ПЕРЕВІРКИ (нові зверху)');
-  for (const r of [...diagnostic.records].reverse()) {
-    rows.push(diagnosticTime(r.at) + ' → ' + (r.failed ? 'Помилка запиту' : 'вимірювання ' + diagnosticTime(r.measured) + '; JSON ' + diagnosticTime(r.created)));
-    if (!r.failed && Number.isFinite(r.measured) && Number.isFinite(r.previous) && r.measured < r.previous)
-      rows.push('⚠ Час пішов назад! Попереднє вимірювання: ' + diagnosticTime(r.previous));
-  }
-  $('diagnostics-report').textContent = rows.join('\n');
-}
-async function api(path, body) {
-  if (staticMode) {
-    if (body !== undefined) throw new Error('Налаштування змінюються через GitHub Secrets.');
-    if (path === '/api/config') return { configured: true, connected: true, canConfigure: false };
-    if (path !== '/api/status') throw new Error('Ця дія доступна лише локально.');
-    const response = await fetch(new URL('./data/status.json?t=' + Date.now(), document.baseURI),
-      { cache: 'no-store', signal: AbortSignal.timeout(20000) });
-    if (typeof diagnostic !== 'undefined') {
-      diagnostic.http = response.status;
-      diagnostic.headers = { date: response.headers.get('date'), age: response.headers.get('age'), modified: response.headers.get('last-modified'), etag: response.headers.get('etag') };
-    }
-    if (!response.ok) throw new Error('Показники ще не опубліковано або файл недоступний.');
-    const data = await response.json();
-    if (!data || !Number.isFinite(data.collectedAt)) throw new Error('Немає коректного часу вимірювання.');
-    return data;
-  }
-  const response = await fetch(path, { cache: 'no-store', signal: AbortSignal.timeout(180000),
-    ...(body === undefined ? {} : { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': config.csrf }, body: JSON.stringify(body) }) });
-  if (path === '/api/status' && typeof diagnostic !== 'undefined') { diagnostic.http = response.status; diagnostic.headers = {}; }
+  if (!response.ok) throw new Error('Не вдалося отримати дані. Спробуйте пізніше.');
   const data = await response.json();
-  if (!response.ok) throw new Error(data.error || 'Не вдалося отримати дані.');
+  if (!data || !Number.isFinite(data.collectedAt)) throw new Error('Немає коректного часу вимірювання.');
   return data;
 }
 async function refresh() {
-  if (isExample() || loading || !config?.configured) return;
-  diagnostic.startedAt = Date.now(); diagnostic.receivedAt = null; diagnostic.http = null; diagnostic.headers = {};
+  if (isExample() || loading) return;
   const version = requestVersion;
   loading = true; $('refresh').disabled = true; $('refresh').classList.add('spinning');
+  // Skeleton only on the very first load: later refreshes keep the numbers on screen.
+  if (!snapshot) { setLoading(true); $('data-time').textContent = 'Завантажуємо дані…'; }
   try {
-    const data = await api('/api/status');
+    const data = await api();
     if (version !== requestVersion || isExample()) return;
-    snapshot = data; render(data); recordDiagnostic(data);
+    // Never show an older measurement than the one already on screen (different servers may answer out of order).
+    if (snapshot && Number.isFinite(snapshot.collectedAt) && data.collectedAt < snapshot.collectedAt) return;
+    snapshot = data; render(data);
   } catch (error) {
-    if (version === requestVersion && !isExample()) { unknown(error.message); recordDiagnostic(null, error.message); }
-  } finally { loading = false; $('refresh').disabled = false; $('refresh').classList.remove('spinning'); }
-}
-function stations(rows, selected) {
-  $('station-select').replaceChildren(...rows.map(row => {
-    const option = document.createElement('option');
-    option.value = row.id; option.textContent = row.name; option.selected = row.id === selected;
-    return option;
-  }));
-  $('station-panel').hidden = false; $('connect-form').hidden = true;
-}
-async function openSettings() {
-  if (!config?.canConfigure) return;
-  $('settings-dialog').showModal(); $('form-message').textContent = '';
-  $('app-id').value = config.appId || ''; $('login').value = config.login || '';
-  $('station-panel').hidden = true; $('connect-form').hidden = config.connected;
-  if (config.connected) {
-    $('form-message').textContent = 'Завантажуємо станції…';
-    try { const data = await api('/api/stations'); stations(data.stations, config.station?.id); $('form-message').textContent = ''; }
-    catch (error) { $('form-message').textContent = error.message; $('connect-form').hidden = false; }
+    if (version === requestVersion && !isExample()) { unknown(error.message); setTimeout(refresh, 10000); }
+  } finally {
+    // An answer to an outdated request (the view was switched meanwhile) must not touch the state of the new one.
+    if (version === requestVersion) { loading = false; $('refresh').disabled = false; $('refresh').classList.remove('spinning'); setLoading(false); }
   }
 }
-async function submit(form, action) {
-  const button = form.querySelector('button[type=submit]');
-  button.disabled = true; $('form-message').textContent = 'Підключаємося…';
-  try { await action(); $('form-message').textContent = ''; }
-  catch (error) { $('form-message').textContent = error.message; }
-  finally { button.disabled = false; }
+function showExample() {
+  const mode = $('view-mode').value;
+  setLoading(mode === 'loading');
+  if (mode === 'loading') { render({ stale: true, collectedAt: null, grid: 'unknown', output: 'unknown', soc: null, events: {} }, true); notice(''); $('data-time').textContent = 'Завантажуємо дані…'; }
+  else render(example(mode), true);
 }
-$('connect-form').addEventListener('submit', event => {
-  event.preventDefault();
-  submit(event.currentTarget, async () => {
-    const data = await api('/api/connect', { appId: $('app-id').value, login: $('login').value, appSecret: $('app-secret').value, password: $('password').value });
-    $('app-secret').value = ''; $('password').value = '';
-    config = await api('/api/config'); requestVersion++; snapshot = null;
-    stations(data.stations, data.selected);
-  });
-});
-$('station-form').addEventListener('submit', event => {
-  event.preventDefault();
-  submit(event.currentTarget, async () => {
-    await api('/api/station', { stationId: $('station-select').value });
-    config = await api('/api/config'); requestVersion++; snapshot = null;
-    $('settings-dialog').close(); $('view-mode').value = 'live';
-    unknown('Завантажуємо показники вибраної станції…');
-    await refresh();
-  });
-});
-$('change-account').addEventListener('click', () => { $('station-panel').hidden = true; $('connect-form').hidden = false; });
-$('close-settings').addEventListener('click', () => $('settings-dialog').close());
-$('settings-dialog').addEventListener('close', () => { $('app-secret').value = ''; $('password').value = ''; });
-$('settings-button').addEventListener('click', openSettings);
-$('refresh').addEventListener('click', () => isExample() ? render(example($('view-mode').value), true) : refresh());
+$('refresh').addEventListener('click', () => isExample() ? showExample() : refresh());
 $('view-mode').addEventListener('change', () => {
   requestVersion++;
-  if (isExample()) render(example($('view-mode').value), true);
-  else { unknown(config?.configured ? 'Завантажуємо дані…' : 'Налаштуйте підключення до Deye Cloud.'); refresh(); }
+  if (isExample()) showExample();
+  else {
+    // Back to real data: show what we already have, or the loading state, and ask for fresh data. No yellow message.
+    loading = false;
+    if (snapshot) { setLoading(false); render(snapshot); }
+    else {
+      setLoading(true);
+      render({ stale: true, collectedAt: null, grid: 'unknown', output: 'unknown', soc: null, events: {} });
+      notice(''); $('data-time').textContent = 'Завантажуємо дані…';
+    }
+    refresh();
+  }
 });
-(async () => {
-  try {
-    config = await api('/api/config');
-    $('settings-button').hidden = !config.canConfigure;
-    if (config.station) $('station-name').textContent = config.station.name;
-    if (config.configured) await refresh();
-    else { notice(config.canConfigure ? 'Підключіть Deye Cloud у налаштуваннях або виберіть приклад унизу.' : 'Підключення потрібно налаштувати на комп’ютері-сервері.'); }
-  } catch (error) { unknown((staticMode ? 'Публічні дані недоступні. ' : 'Локальний сервер недоступний. ') + error.message); }
-})();
+refresh();
 setInterval(refresh, 60000);
 setInterval(() => { updateMeasurementAge(); updateGridDuration(); }, 1000);
 setInterval(() => {
@@ -321,14 +214,3 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden) refr
 const installHelp = $('install-help');
 $('open-install-help').addEventListener('click', () => installHelp.showModal());
 $('close-install-help').addEventListener('click', () => installHelp.close());
-
-$('open-diagnostics').addEventListener('click', () => { updateDiagnostics(); $('diagnostics-dialog').showModal(); });
-$('close-diagnostics').addEventListener('click', () => $('diagnostics-dialog').close());
-$('copy-diagnostics').addEventListener('click', async () => {
-  updateDiagnostics();
-  try {
-    await navigator.clipboard.writeText($('diagnostics-report').textContent);
-    $('diagnostics-copy-status').textContent = 'Звіт скопійовано.';
-  } catch { $('diagnostics-copy-status').textContent = 'Не вдалося скопіювати. Зробіть скріншот або виділіть текст звіту.'; }
-});
-setInterval(() => { if ($('diagnostics-dialog').open) updateDiagnostics(); }, 1000);

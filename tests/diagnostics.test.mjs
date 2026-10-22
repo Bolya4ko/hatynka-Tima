@@ -1,46 +1,15 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import vm from 'node:vm';
-import { readFile } from 'node:fs/promises';
-import { publicStatus } from '../tools/build-pages.mjs';
+import { publicStatus } from '../lib/public-status.mjs';
 import { DeyeClient } from '../lib/deye.mjs';
 
-test('diagnostic journal detects regression across reload, survives errors and remains bounded', async () => {
-  const source = await readFile(new URL('../public/app.js', import.meta.url), 'utf8');
-  let stored = null;
-  const storage = { getItem: () => stored, setItem: (_, value) => { stored = value; } };
-  function browser() {
-    const nodes = new Map();
-    const element = id => {
-      if (!nodes.has(id)) nodes.set(id, { textContent: '', value: 'live' });
-      return nodes.get(id);
-    };
-    const context = vm.createContext({ Date, Intl, sessionStorage: storage,
-      document: { querySelector: () => ({content:'static'}), getElementById: element } });
-    vm.runInContext(source.slice(0, source.indexOf('async function api(')), context);
-    return { context, element };
-  }
-  const first = browser();
-  vm.runInContext('recordDiagnostic({collectedAt: 200000, diagnostics:{fileCreatedAt: 300000}})', first.context);
-  const second = browser();
-  vm.runInContext('recordDiagnostic({collectedAt: 100000, diagnostics:{fileCreatedAt: 400000}})', second.context);
-  assert.match(second.element('diagnostics-report').textContent, /Час пішов назад/);
-  assert.match(second.element('diagnostics-report').textContent, /це не чиста тривалість публікації/);
-  vm.runInContext('recordDiagnostic(null, "Timeout")', second.context);
-  assert.match(second.element('diagnostics-report').textContent, /Timeout/);
-  vm.runInContext('for(let i=0;i<20;i++) recordDiagnostic({collectedAt: 500000})', second.context);
-  assert.equal(JSON.parse(stored).length, 12);
-  assert.ok(!stored.includes('Timeout'));
-});
-
-test('diagnostics export permits only numeric timings and public run identifiers', () => {
+test('public status permits only numeric timings', () => {
   const result = publicStatus({diagnostics:{requestStartedAt:100, latestReceivedAt:200,
     completedAt:300, stationUpdatedAt:50, fileCreatedAt:400, runId:123, runAttempt:2,
     password:'private', response:'private', token:'private'}});
   assert.equal(result.diagnostics.completedAt, 300);
-  assert.equal(result.diagnostics.runId, 123);
   assert.ok(!JSON.stringify(result).includes('private'));
-  assert.equal(publicStatus({diagnostics:{runId:'secret'}}).diagnostics.runId, null);
+  assert.equal(publicStatus({diagnostics:{completedAt:'secret'}}).diagnostics.completedAt, null);
 });
 
 test('Deye diagnostics surround latest and history requests without exposing readings', async () => {

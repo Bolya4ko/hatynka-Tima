@@ -1,10 +1,10 @@
-name: Update Deye dashboard
+name: Publish dashboard
+# Сторінка сама читає дані з Cloudflare Worker, тому секрети Deye тут не потрібні.
+# Публікація запускається після кожного push у main і вручну (Run workflow).
 on:
   workflow_dispatch:
-  schedule:
-    - cron: '3-58/5 * * * *'  
   push:
-    branches: [main, master]
+    branches: [main]
 permissions:
   contents: read
 concurrency:
@@ -12,7 +12,6 @@ concurrency:
   cancel-in-progress: false
 jobs:
   publish:
-    if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -28,15 +27,8 @@ jobs:
         with:
           node-version: '22'
       - run: npm test
-      - name: Read Deye and build public files
-        run: npm run build:pages
-        env:
-          DEYE_APP_ID: ${{ secrets.DEYE_APP_ID }}
-          DEYE_APP_SECRET: ${{ secrets.DEYE_APP_SECRET }}
-          DEYE_LOGIN: ${{ secrets.DEYE_LOGIN }}
-          DEYE_PASSWORD: ${{ secrets.DEYE_PASSWORD }}
-          DEYE_STATION_ID: ${{ vars.DEYE_STATION_ID }}
-          DEYE_STATION_NAME: ${{ vars.DEYE_STATION_NAME }}
+      - name: Prepare page
+        run: npm run build
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v4
         with:

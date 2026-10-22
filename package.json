@@ -3,15 +3,14 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Local Deye Cloud dashboard for Chavdar 13",
+  "description": "Power dashboard for Chavdar 13: static page plus Cloudflare Worker for Deye Cloud",
   "engines": {
     "node": ">=22"
   },
   "scripts": {
-    "start": "node server.mjs",
-    "start:lan": "node server.mjs --lan",
     "test": "node --test tests/*.test.mjs",
-    "build:pages": "node tools/build-pages.mjs",
-    "build:pages:local": "node tools/build-pages.mjs --local"
+    "worker:dev": "wrangler dev",
+    "worker:deploy": "wrangler deploy",
+    "build": "node tools/build-pages.mjs"
   }
 }

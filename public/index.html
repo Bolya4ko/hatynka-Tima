@@ -2,7 +2,7 @@
 <html lang="uk">
 <head>
   <meta charset="utf-8">
-  <meta name="dashboard-mode" content="local">
+  <meta name="dashboard-api" content="https://c13-power.sergeymaximenko.workers.dev">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f3f7fa">
   <meta name="description" content="Електроживлення Чавдар 13: мережа, вихід інвертора та заряд батареї.">
@@ -26,8 +26,6 @@
     <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v6l4 2"/></symbol>
     <symbol id="i-cloud" viewBox="0 0 24 24"><path d="M6 18a5 5 0 0 1-.5-10 7 7 0 0 1 13 1A4.5 4.5 0 0 1 18 18Z"/></symbol>
     <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 8a8 8 0 0 0-14-3L3 8m0-5v5h5M4 16a8 8 0 0 0 14 3l3-3m0 5v-5h-5"/></symbol>
-    <symbol id="i-settings" viewBox="0 0 24 24"><path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="3"/><circle cx="15" cy="17" r="3"/></symbol>
-    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14m-5-5 5 5-5 5"/></symbol>
   </svg>
 
   <main class="dashboard">
@@ -43,13 +41,12 @@
       <div class="header-actions">
         <span class="source-pill" id="source-pill"><span class="source-dot"></span><span id="source-text">Deye Cloud</span></span>
         <button class="icon-button" id="refresh" title="Оновити дані" aria-label="Оновити дані"><svg><use href="#i-refresh"/></svg></button>
-        <button class="icon-button" id="settings-button" title="Налаштування" aria-label="Відкрити налаштування"><svg><use href="#i-settings"/></svg></button>
       </div>
     </header>
 
     <section class="freshness" aria-label="Час даних">
       <div class="freshness-time"><svg><use href="#i-clock"/></svg><strong id="data-time">Очікуємо дані</strong><span id="data-elapsed" title="Час, що минув від вимірювання Deye" hidden></span></div>
-      <div class="freshness-note"><svg><use href="#i-cloud"/></svg><span>Хмарні дані надходять із затримкою близько 5 хв</span></div>
+      <div class="freshness-note"><svg><use href="#i-cloud"/></svg><span class="note-text">Хмарні дані надходять із затримкою близько 5 хв</span><span class="loading-dots" aria-hidden="true"><i></i><i></i><i></i></span></div>
     </section>
     <div class="notice" id="notice" role="status" hidden></div>
 
@@ -91,7 +88,7 @@
 
     <footer class="controls">
       <span id="update-note">Автоматичне оновлення щохвилини</span>
-      <label for="view-mode">Перегляд
+      <label for="view-mode" id="demo-control">Перегляд
         <select id="view-mode">
           <option value="live">Реальні дані</option>
           <option value="off">Приклад: мережі немає</option>
@@ -99,40 +96,12 @@
           <option value="standby">Приклад: режим очікування</option>
           <option value="output-off">Приклад: немає напруги на виході</option>
           <option value="stale">Приклад: дані застаріли</option>
+          <option value="loading">Приклад: завантаження</option>
         </select>
       </label>
     </footer>
     <button type="button" class="install-help-button" id="open-install-help" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="2" width="12" height="20" rx="3"/><path d="M10 5h4M11 19h2"/></svg><span>Як додати на робочий стіл iPhone</span></button>
-    <button type="button" class="install-help-button" id="open-diagnostics" aria-haspopup="dialog"><span aria-hidden="true">ⓘ</span> Технічна інформація</button>
   </main>
-  <dialog id="diagnostics-dialog" aria-labelledby="diagnostics-title">
-    <div class="dialog-heading"><h2 id="diagnostics-title">Технічна інформація</h2><button class="close-button" id="close-diagnostics" aria-label="Закрити">×</button></div>
-    <p class="secondary">Час за Києвом. Зробіть скріншот або скопіюйте звіт. Журнал зберігається в цій вкладці, зокрема після перезавантаження.</p>
-    <pre id="diagnostics-report"></pre>
-    <button class="install-help-button" id="copy-diagnostics" type="button">Скопіювати звіт</button>
-    <p id="diagnostics-copy-status" role="status"></p>
-  </dialog>
-
-  <dialog id="settings-dialog" aria-labelledby="settings-title">
-    <div class="dialog-heading"><div><p class="eyebrow">ПІДКЛЮЧЕННЯ</p><h2 id="settings-title">Deye Cloud</h2></div><button class="close-button" id="close-settings" aria-label="Закрити">×</button></div>
-    <p class="dialog-intro">Підключення зберігається на цьому комп’ютері. Повторно вводити пароль не потрібно.</p>
-    <div id="station-panel" hidden>
-      <form id="station-form">
-        <label>Станція<select id="station-select" required></select></label>
-        <button class="primary" type="submit">Показати станцію <svg><use href="#i-arrow"/></svg></button>
-      </form>
-      <button class="text-button" id="change-account" type="button">Змінити облікові дані</button>
-    </div>
-    <form id="connect-form">
-      <label>App ID<input id="app-id" name="appId" autocomplete="off" required></label>
-      <label>Email або ім’я користувача<input id="login" name="login" autocomplete="username" required></label>
-      <label>App Secret<input id="app-secret" name="appSecret" type="password" autocomplete="off" required></label>
-      <label>Пароль Deye<input id="password" name="password" type="password" autocomplete="current-password" required></label>
-      <p class="field-help">Регіон: EMEA, APAC · європейський сервер Deye</p>
-      <button class="primary" type="submit">Підключити <svg><use href="#i-arrow"/></svg></button>
-    </form>
-    <p class="form-message" id="form-message" role="status"></p>
-  </dialog>
   <dialog id="install-help" aria-labelledby="install-help-title">
     <div class="dialog-heading">
       <div><p class="eyebrow">ЗАВЖДИ ПІД РУКОЮ</p><h2 id="install-help-title">Додайте «Чавдар 13» на iPhone</h2></div>

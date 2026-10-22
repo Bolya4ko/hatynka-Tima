@@ -1,11 +1,12 @@
-import { createHash } from 'node:crypto';
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, readFile, readdir, rm } from 'node:fs/promises';
+import vm from 'node:vm';
 import os from 'node:os';
 import path from 'node:path';
-import vm from 'node:vm';
-import { buildPages, publicStatus, environmentSettings } from '../tools/build-pages.mjs';
+import { createHash } from 'node:crypto';
+import { mkdtemp, readFile, readdir, rm } from 'node:fs/promises';
+import { buildPages } from '../tools/build-pages.mjs';
+import { publicStatus } from '../lib/public-status.mjs';
 
 test('public export excludes credentials, identifiers and upstream errors', () => {
   const data = publicStatus({ station: { id: 'private-id', name: 'Чавдар 13' },
@@ -16,23 +17,20 @@ test('public export excludes credentials, identifiers and upstream errors', () =
   for (const value of ['private-id', 'secret', 'token', 'private response', 'hidden']) assert.ok(!json.includes(value));
   assert.equal(data.output, 'on');
   assert.equal(data.events.appeared.at, 150);
-  assert.throws(() => environmentSettings({}), /DEYE_APP_ID/);
 });
 
-test('Pages artifact has relative assets, static mode and no server or secrets', async () => {
+test('Pages artifact has relative assets, versioned script and styles, and no secrets', async () => {
   const directory = await mkdtemp(path.join(os.tmpdir(), 'c13-pages-'));
   try {
-    await buildPages({ collectedAt: Date.now(), station: { name: 'Test' } }, directory);
+    await buildPages(directory);
     const html = await readFile(path.join(directory, 'index.html'), 'utf8');
-    assert.match(html, /name="dashboard-mode" content="static"/);
     const scriptHash = createHash('sha256').update(await readFile(new URL('../public/app.js', import.meta.url))).digest('hex').slice(0, 16);
     assert.ok(html.includes('src="./app.js?v=' + scriptHash + '"'));
     const styleHash = createHash('sha256').update(await readFile(new URL('../public/styles.css', import.meta.url))).digest('hex').slice(0, 16);
     assert.ok(html.includes('href="./styles.css?v=' + styleHash + '"'));
-    assert.deepEqual((await readdir(directory)).sort(), ['.nojekyll', 'app.js', 'data', 'favicon.svg', 'index.html', 'styles.css', 'iphone-step-1.png', 'iphone-step-2.png', 'iphone-step-3.png'].sort());
-    assert.deepEqual(await readdir(path.join(directory, 'data')), ['status.json']);
-    const original = await readFile(new URL('../public/index.html', import.meta.url), 'utf8');
-    assert.match(original, /name="dashboard-mode" content="local"/);
+    assert.deepEqual((await readdir(directory)).sort(), ['.nojekyll', 'app.js', 'favicon.svg', 'index.html', 'styles.css', 'iphone-step-1.png', 'iphone-step-2.png', 'iphone-step-3.png'].sort());
+    assert.match(html, /name="dashboard-api" content="https:\/\/[^"]+"/);
+    assert.ok(!/secret|password|token/i.test(html));
   } finally {
     const resolved = path.resolve(directory);
     assert.ok(resolved.startsWith(path.resolve(os.tmpdir()) + path.sep));
@@ -41,20 +39,37 @@ test('Pages artifact has relative assets, static mode and no server or secrets',
   }
 });
 
-test('static browser requests nested repository JSON, never local config or secrets', async () => {
+async function browserApi(content, search = '') {
   const script = await readFile(new URL('../public/app.js', import.meta.url), 'utf8');
   const code = script.slice(script.indexOf('async function api('), script.indexOf('async function refresh('));
   const calls = [];
   const api = vm.runInNewContext(code + '; api;', {
-    staticMode: true, URL, Date, AbortSignal,
-    document: { baseURI: 'https://example.github.io/C13PowerDashboard/' },
+    URL, URLSearchParams, Date, AbortSignal, location: { search },
+    document: { querySelector: () => ({ content }) },
     fetch: async url => { calls.push(String(url)); return Response.json({ collectedAt: Date.now() }); }
   });
-  const config = await api('/api/config');
-  assert.equal(config.canConfigure, false);
-  assert.equal(calls.length, 0);
-  await api('/api/status');
-  assert.match(calls[0], /^https:\/\/example.github.io\/C13PowerDashboard\/data\/status.json\?t=/);
-  await assert.rejects(api('/api/connect', {}), /GitHub Secrets/);
+  return { api, calls };
+}
+
+test('the page reads live data from the configured Worker address', async () => {
+  const { api, calls } = await browserApi('https://c13.example.workers.dev');
+  await api();
+  assert.equal(calls[0], 'https://c13.example.workers.dev/api/status');
 });
 
+test('the page may open another allowed station with ?station=ID and ignores invalid values', async () => {
+  const other = await browserApi('https://c13.example.workers.dev', '?station=61167187');
+  await other.api();
+  assert.equal(other.calls[0], 'https://c13.example.workers.dev/api/status?station=61167187');
+  const invalid = await browserApi('https://c13.example.workers.dev', '?station=abc');
+  await invalid.api();
+  assert.equal(invalid.calls[0], 'https://c13.example.workers.dev/api/status');
+  const local = await browserApi('https://c13.example.workers.dev', '?api=http://127.0.0.1:8787');
+  await local.api();
+  assert.equal(local.calls[0], 'http://127.0.0.1:8787/api/status');
+  const foreign = await browserApi('https://c13.example.workers.dev', '?api=https://evil.example');
+  await foreign.api();
+  assert.equal(foreign.calls[0], 'https://c13.example.workers.dev/api/status');
+  const missing = await browserApi('');
+  await assert.rejects(missing.api(), /адресу джерела/);
+});
