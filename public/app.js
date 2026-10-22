@@ -146,8 +146,7 @@ function render(data, example = false) {
   $('battery-card').dataset.mascot = charging || discharging ? 'on' : '';
   // The level loops over the whole battery: from empty to full while charging, from full to empty while discharging.
   // The real charge is the number on the card; the animation only shows the direction.
-  $('battery-mascot').style?.setProperty('--lvl', discharging ? '1' : '0.04');
-  $('battery-mascot').style?.setProperty('--lvl2', discharging ? '0.04' : '1');
+  $('battery-mascot').dataset.dir = discharging ? 'down' : 'up';
   restartAnimations([
     ['grid', grid === 'on', $('grid-anim')],
     ['gears', gears, $('inverter-anim')],

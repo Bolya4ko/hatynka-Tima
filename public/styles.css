@@ -63,14 +63,22 @@ h1 { font-size: clamp(27px, 3.4vw, 42px); line-height: 1.14; letter-spacing: -1.
 .mascot .m-body { fill: #fff; stroke: currentColor; stroke-width: 3; }
 .mascot .m-plug { fill: var(--muted); }
 .mascot .m-plug-line { stroke: var(--muted); stroke-width: 2; }
-.mascot .m-lvl { fill: currentColor; opacity: .4; transform-box: fill-box; transform-origin: 50% 100%; transform: scaleY(var(--lvl, .5)); animation: m-level 3.2s ease-in-out infinite; }
+.mascot .m-lvl { fill: currentColor; opacity: .4; transform-box: fill-box; transform-origin: 50% 100%; transform: scaleY(.5); animation: m-level-up 3.2s ease-in-out infinite; }
 /* The level moves one way only (down when discharging, up when charging); the jump back is hidden by a fade. */
-@keyframes m-level {
-  0% { transform: scaleY(var(--lvl, .5)); opacity: .4; }
-  80% { transform: scaleY(var(--lvl2, .5)); opacity: .4; }
-  90% { transform: scaleY(var(--lvl2, .5)); opacity: 0; }
-  91% { transform: scaleY(var(--lvl, .5)); opacity: 0; }
-  100% { transform: scaleY(var(--lvl, .5)); opacity: .4; }
+.mascot[data-dir="down"] .m-lvl { animation-name: m-level-down; }
+@keyframes m-level-up {
+  0% { transform: scaleY(.04); opacity: .4; }
+  80% { transform: scaleY(1); opacity: .4; }
+  90% { transform: scaleY(1); opacity: 0; }
+  91% { transform: scaleY(.04); opacity: 0; }
+  100% { transform: scaleY(.04); opacity: .4; }
+}
+@keyframes m-level-down {
+  0% { transform: scaleY(1); opacity: .4; }
+  80% { transform: scaleY(.04); opacity: .4; }
+  90% { transform: scaleY(.04); opacity: 0; }
+  91% { transform: scaleY(1); opacity: 0; }
+  100% { transform: scaleY(1); opacity: .4; }
 }
 .mascot .m-face { fill: none; stroke: #162c42; stroke-width: 3; stroke-linecap: round; }
 .mascot .m-mouth { fill: #162c42; stroke: none; }
