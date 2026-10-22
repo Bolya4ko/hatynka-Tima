@@ -217,3 +217,8 @@ input, form select { width: 100%; min-width: 0; border: 1px solid #cddce7; borde
   background: var(--tint); color: var(--accent); font-size: 13px;
   line-height: 1.45; font-weight: 600; font-variant-numeric: tabular-nums;
 }
+
+#diagnostics-dialog { width: min(760px, calc(100% - 24px)); }
+#diagnostics-report { white-space: pre-wrap; overflow-wrap: anywhere; font: 13px/1.65 system-ui, sans-serif; font-variant-numeric: tabular-nums; color: #23465b; }
+#open-diagnostics { margin-left: 8px; }
+@media(max-width: 760px) { #open-diagnostics { margin-left: 0; } }

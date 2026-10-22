@@ -103,7 +103,15 @@
       </label>
     </footer>
     <button type="button" class="install-help-button" id="open-install-help" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="2" width="12" height="20" rx="3"/><path d="M10 5h4M11 19h2"/></svg><span>Як додати на робочий стіл iPhone</span></button>
+    <button type="button" class="install-help-button" id="open-diagnostics" aria-haspopup="dialog"><span aria-hidden="true">ⓘ</span> Технічна інформація</button>
   </main>
+  <dialog id="diagnostics-dialog" aria-labelledby="diagnostics-title">
+    <div class="dialog-heading"><h2 id="diagnostics-title">Технічна інформація</h2><button class="close-button" id="close-diagnostics" aria-label="Закрити">×</button></div>
+    <p class="secondary">Час за Києвом. Зробіть скріншот або скопіюйте звіт. Журнал зберігається в цій вкладці, зокрема після перезавантаження.</p>
+    <pre id="diagnostics-report"></pre>
+    <button class="install-help-button" id="copy-diagnostics" type="button">Скопіювати звіт</button>
+    <p id="diagnostics-copy-status" role="status"></p>
+  </dialog>
 
   <dialog id="settings-dialog" aria-labelledby="settings-title">
     <div class="dialog-heading"><div><p class="eyebrow">ПІДКЛЮЧЕННЯ</p><h2 id="settings-title">Deye Cloud</h2></div><button class="close-button" id="close-settings" aria-label="Закрити">×</button></div>

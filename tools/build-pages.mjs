@@ -13,6 +13,7 @@ export function publicStatus(data) {
   return {
     station: { name: String(data.station?.name || 'Чавдар 13') },
     collectedAt: numeric(data.collectedAt), fetchedAt: numeric(data.fetchedAt),
+    diagnostics: Object.fromEntries(['requestStartedAt', 'latestReceivedAt', 'completedAt', 'stationUpdatedAt', 'fileCreatedAt', 'runId', 'runAttempt'].map(key => [key, numeric(data.diagnostics?.[key])])),
     stale: data.stale !== false,
     grid: ['on', 'off', 'unstable'].includes(data.grid) ? data.grid : 'unknown',
     output: ['on', 'off', 'unstable'].includes(data.output) ? data.output : 'unknown',
@@ -32,7 +33,7 @@ export async function buildPages(data, directory = path.join(root, 'dist')) {
   for (const name of ['app.js', 'styles.css', 'favicon.svg', 'iphone-step-1.png', 'iphone-step-2.png', 'iphone-step-3.png'])
     await copyFile(path.join(root, 'public', name), path.join(directory, name));
   await writeFile(path.join(directory, '.nojekyll'), '');
-  await writeFile(path.join(directory, 'data/status.json'), JSON.stringify(publicStatus(data)));
+  await writeFile(path.join(directory, 'data/status.json'), JSON.stringify(publicStatus({ ...data, diagnostics: { ...data.diagnostics, fileCreatedAt: Date.now(), runId: Number(process.env.GITHUB_RUN_ID) || null, runAttempt: Number(process.env.GITHUB_RUN_ATTEMPT) || null } })));
 }
 export function environmentSettings(env) {
   const fields = { appId: 'DEYE_APP_ID', appSecret: 'DEYE_APP_SECRET', login: 'DEYE_LOGIN',

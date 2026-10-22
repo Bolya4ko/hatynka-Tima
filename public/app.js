@@ -137,6 +137,80 @@ function example(mode) {
     loadWatts: mains || mode === 'output-off' ? 0 : 16800,
     events: { appeared: { at: now - 3600000 }, disappeared: { at: now - 10800000 } } };
 }
+const diagnostic = { startedAt: null, receivedAt: null, http: null, headers: {}, data: null, error: '', records: [], loaded: false };
+function diagnosticTime(value) {
+  return Number.isFinite(value) && value > 0 ? new Intl.DateTimeFormat('uk-UA', {
+    timeZone: 'Europe/Kyiv', day: '2-digit', month: '2-digit', year: 'numeric',
+    hour: '2-digit', minute: '2-digit', second: '2-digit'
+  }).format(value) : 'немає інформації';
+}
+function diagnosticDuration(start, end) {
+  if (!Number.isFinite(start) || !Number.isFinite(end)) return 'немає інформації';
+  const s = Math.round((end - start) / 1000);
+  return (s < 0 ? '−' : '') + Math.floor(Math.abs(s) / 60) + ' хв. ' + Math.abs(s) % 60 + ' с.';
+}
+function recordDiagnostic(data, error = '') {
+  if (!diagnostic.loaded) {
+    diagnostic.loaded = true;
+    try {
+      const saved = JSON.parse(sessionStorage.getItem('c13-diagnostics-v1'));
+      if (Array.isArray(saved)) diagnostic.records = saved.filter(r =>
+        r && Number.isFinite(r.at) && (r.measured === null || Number.isFinite(r.measured)) &&
+        (r.previous === null || Number.isFinite(r.previous)) &&
+        (r.created === null || Number.isFinite(r.created)) && typeof r.failed === 'boolean').slice(-12);
+    } catch {}
+  }
+  const previous = [...diagnostic.records].reverse().find(r => !r.failed)?.measured ?? null;
+  diagnostic.receivedAt = Date.now();
+  diagnostic.data = data;
+  diagnostic.error = error;
+  diagnostic.records.push({ at: diagnostic.receivedAt, measured: data?.collectedAt ?? null,
+    created: data?.diagnostics?.fileCreatedAt ?? null, previous, failed: !!error });
+  diagnostic.records = diagnostic.records.slice(-12);
+  try { sessionStorage.setItem('c13-diagnostics-v1', JSON.stringify(diagnostic.records)); } catch {}
+  updateDiagnostics();
+}
+function updateDiagnostics() {
+  const d = diagnostic.data, t = d?.diagnostics || {};
+  const rows = [
+    'Режим: ' + (staticMode ? 'GitHub Pages' : 'Локальний сервер') + (isExample() ? ' · на екрані приклад; звіт про реальні дані' : ''),
+    'Годинник пристрою: ' + diagnosticTime(Date.now()),
+    'Вимірювання на екрані: ' + diagnosticTime(displayedMeasurementTime),
+    '', '1. ЧАС У ДЖЕРЕЛІ',
+    'Вимірювання інвертора (device/latest): ' + diagnosticTime(d?.collectedAt),
+    'Оновлення станції (station/latest): ' + diagnosticTime(t.stationUpdatedAt),
+    '', '2. ОТРИМАННЯ ТА ПІДГОТОВКА',
+    'Початок запиту до Deye: ' + diagnosticTime(t.requestStartedAt),
+    'Поточні показники отримано: ' + diagnosticTime(t.latestReceivedAt),
+    'Обробку з історією завершено: ' + diagnosticTime(t.completedAt),
+    'JSON підготовлено: ' + diagnosticTime(t.fileCreatedAt),
+    'Вік вимірювання при отриманні: ' + diagnosticDuration(d?.collectedAt, t.latestReceivedAt),
+    'Запит поточних показників: ' + diagnosticDuration(t.requestStartedAt, t.latestReceivedAt),
+    'Очікування історії / обробка: ' + diagnosticDuration(t.latestReceivedAt, t.completedAt),
+    '', '3. ПЕРЕВІРКА СТОРІНКОЮ',
+    'Запит сторінки почався: ' + diagnosticTime(diagnostic.startedAt),
+    'Відповідь отримано: ' + diagnosticTime(diagnostic.receivedAt),
+    'Тривалість запиту: ' + diagnosticDuration(diagnostic.startedAt, diagnostic.receivedAt),
+    'Від підготовки JSON до отримання: ' + diagnosticDuration(t.fileCreatedAt, diagnostic.receivedAt),
+    'HTTP: ' + (diagnostic.http ?? '—'),
+    'Дата HTTP-відповіді: ' + (diagnostic.headers.date || 'не надано'),
+    'Age кешу (секунди): ' + (diagnostic.headers.age || 'не надано'),
+    'Last-Modified: ' + (diagnostic.headers.modified || 'не надано'),
+    'ETag: ' + (diagnostic.headers.etag || 'не надано'),
+    'Результат: ' + (diagnostic.error || (d ? 'Дані отримано' : 'Очікуємо перевірку')),
+    'Історія: ' + (d?.historyAvailable ? 'отримана' : 'недоступна або ще не перевірена'),
+    '', 'Час публікації тут невідомий. Інтервал від JSON до браузера включає публікацію, очікування перевірки та кеш; це не чиста тривалість публікації.',
+    'Годинник пристрою впливає на розраховані затримки.'
+  ];
+  if (Number.isSafeInteger(t.runId) && t.runId > 0) rows.push('Запуск Actions (спроба ' + (t.runAttempt || '?') + '): https://github.com/SergeyMaximenko/C13PowerDashboard/actions/runs/' + t.runId);
+  rows.push('', 'ОСТАННІ ПЕРЕВІРКИ (нові зверху)');
+  for (const r of [...diagnostic.records].reverse()) {
+    rows.push(diagnosticTime(r.at) + ' → ' + (r.failed ? 'Помилка запиту' : 'вимірювання ' + diagnosticTime(r.measured) + '; JSON ' + diagnosticTime(r.created)));
+    if (!r.failed && Number.isFinite(r.measured) && Number.isFinite(r.previous) && r.measured < r.previous)
+      rows.push('⚠ Час пішов назад! Попереднє вимірювання: ' + diagnosticTime(r.previous));
+  }
+  $('diagnostics-report').textContent = rows.join('\n');
+}
 async function api(path, body) {
   if (staticMode) {
     if (body !== undefined) throw new Error('Налаштування змінюються через GitHub Secrets.');
@@ -144,6 +218,10 @@ async function api(path, body) {
     if (path !== '/api/status') throw new Error('Ця дія доступна лише локально.');
     const response = await fetch(new URL('./data/status.json?t=' + Date.now(), document.baseURI),
       { cache: 'no-store', signal: AbortSignal.timeout(20000) });
+    if (typeof diagnostic !== 'undefined') {
+      diagnostic.http = response.status;
+      diagnostic.headers = { date: response.headers.get('date'), age: response.headers.get('age'), modified: response.headers.get('last-modified'), etag: response.headers.get('etag') };
+    }
     if (!response.ok) throw new Error('Показники ще не опубліковано або файл недоступний.');
     const data = await response.json();
     if (!data || !Number.isFinite(data.collectedAt)) throw new Error('Немає коректного часу вимірювання.');
@@ -151,20 +229,22 @@ async function api(path, body) {
   }
   const response = await fetch(path, { cache: 'no-store', signal: AbortSignal.timeout(180000),
     ...(body === undefined ? {} : { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': config.csrf }, body: JSON.stringify(body) }) });
+  if (path === '/api/status' && typeof diagnostic !== 'undefined') { diagnostic.http = response.status; diagnostic.headers = {}; }
   const data = await response.json();
   if (!response.ok) throw new Error(data.error || 'Не вдалося отримати дані.');
   return data;
 }
 async function refresh() {
   if (isExample() || loading || !config?.configured) return;
+  diagnostic.startedAt = Date.now(); diagnostic.receivedAt = null; diagnostic.http = null; diagnostic.headers = {};
   const version = requestVersion;
   loading = true; $('refresh').disabled = true; $('refresh').classList.add('spinning');
   try {
     const data = await api('/api/status');
     if (version !== requestVersion || isExample()) return;
-    snapshot = data; render(data);
+    snapshot = data; render(data); recordDiagnostic(data);
   } catch (error) {
-    if (version === requestVersion && !isExample()) unknown(error.message);
+    if (version === requestVersion && !isExample()) { unknown(error.message); recordDiagnostic(null, error.message); }
   } finally { loading = false; $('refresh').disabled = false; $('refresh').classList.remove('spinning'); }
 }
 function stations(rows, selected) {
@@ -241,3 +321,14 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden) refr
 const installHelp = $('install-help');
 $('open-install-help').addEventListener('click', () => installHelp.showModal());
 $('close-install-help').addEventListener('click', () => installHelp.close());
+
+$('open-diagnostics').addEventListener('click', () => { updateDiagnostics(); $('diagnostics-dialog').showModal(); });
+$('close-diagnostics').addEventListener('click', () => $('diagnostics-dialog').close());
+$('copy-diagnostics').addEventListener('click', async () => {
+  updateDiagnostics();
+  try {
+    await navigator.clipboard.writeText($('diagnostics-report').textContent);
+    $('diagnostics-copy-status').textContent = 'Звіт скопійовано.';
+  } catch { $('diagnostics-copy-status').textContent = 'Не вдалося скопіювати. Зробіть скріншот або виділіть текст звіту.'; }
+});
+setInterval(() => { if ($('diagnostics-dialog').open) updateDiagnostics(); }, 1000);
