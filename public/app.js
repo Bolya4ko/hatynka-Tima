@@ -278,7 +278,7 @@ $('open-install-help').addEventListener('click', () => installHelp.showModal());
 $('close-install-help').addEventListener('click', () => installHelp.close());
 
 // Outage schedule: queue 5.2 of DTEK Kyiv regional grids. Refresh every 3 hours.
-const outageEndpoint = 'https://alerts.energy/api/source-registry/areas/kyivska-oblast/shutdowns';
+const outageEndpoint = new URL('/api/outage-schedule', document.querySelector('meta[name="dashboard-api"]')?.content?.trim()).toString();
 function kyivTime(value) { return new Intl.DateTimeFormat('uk-UA', { timeZone: 'Europe/Kyiv', hour: '2-digit', minute: '2-digit' }).format(value); }
 function renderOutage(row) {
   const chart = $('outage-chart');
@@ -297,8 +297,7 @@ async function refreshOutage() {
   try {
     const response = await fetch(outageEndpoint, { cache: 'no-store', signal: AbortSignal.timeout(20000) });
     if (!response.ok) throw new Error();
-    const rows = await response.json();
-    renderOutage(rows.find(row => row.initiator === 'kyivska_oblast_oblenergo' && row.queue === '5.2'));
+    renderOutage(await response.json());
   } catch {
     $('outage-updated').textContent = 'Немає свіжого графіка';
     $('outage-note').textContent = 'Не вдалося завантажити розклад. Спробуйте оновити сторінку пізніше.';

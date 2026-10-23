@@ -38,8 +38,9 @@ export function allowedStations(env) {
 }
 
 // State lives while the Worker isolate is warm: token, history and the last answer are reused per station.
-export function createHandler({ clientFactory = (settings, options) => new DeyeClient(settings, undefined, options), now = Date.now } = {}) {
+export function createHandler({ clientFactory = (settings, options) => new DeyeClient(settings, undefined, options), now = Date.now, fetcher = fetch } = {}) {
   const entries = new Map();
+  let outageCache = null;
 
   function headers(env, extra = {}) {
     return {
@@ -79,6 +80,23 @@ export function createHandler({ clientFactory = (settings, options) => new DeyeC
     if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: headers(env) });
     if (request.method !== 'GET') return send(env, 405, { error: 'Дозволено лише GET.' });
     if (url.pathname === '/' || url.pathname === '/health') return send(env, 200, { ok: true });
+    if (url.pathname === '/api/outage-schedule') {
+      const ttl = 3 * 60 * 60 * 1000;
+      if (outageCache && now() - outageCache.at < ttl) return send(env, 200, outageCache.data, { 'X-Cache': 'HIT' });
+      try {
+        const response = await fetcher('https://alerts.energy/api/source-registry/areas/kyivska-oblast/shutdowns');
+        if (!response.ok) throw new Error('Schedule source unavailable');
+        const rows = await response.json();
+        const row = Array.isArray(rows) && rows.find(item => item?.initiator === 'kyivska_oblast_oblenergo' && item?.queue === '5.2');
+        if (!row || !Array.isArray(row.today) || row.today.length !== 24) throw new Error('Schedule unavailable');
+        const data = { queue: '5.2', updated: row.updated || null, today: row.today.map(value => [0, 1, 2, 3].includes(value) ? value : 0), todayStatus: row.todayStatus || 'Unknown' };
+        outageCache = { at: now(), data };
+        return send(env, 200, data, { 'X-Cache': 'MISS' });
+      } catch {
+        if (outageCache) return send(env, 200, outageCache.data, { 'X-Cache': 'STALE' });
+        return send(env, 502, { error: 'Графік тимчасово недоступний.' });
+      }
+    }
     if (url.pathname !== '/api/status') return send(env, 404, { error: 'Не знайдено.' });
 
     let entry;
