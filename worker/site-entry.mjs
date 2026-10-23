@@ -31,7 +31,7 @@ function bytesFromDataUrl(value) {
 }
 
 function staticResponse(value, contentType) {
-  const body = value.startsWith('data:') ? bytesFromDataUrl(value) : value;
+  const body = typeof value === 'string' && value.startsWith('data:') ? bytesFromDataUrl(value) : value;
   return new Response(body, {
     headers: {
       'Content-Type': contentType,

@@ -1,18 +1,22 @@
 name = "deye-power-dashboard"
-main = "worker/index.mjs"
+main = "worker/site-entry.mjs"
 compatibility_date = "2025-01-01"
 account_id = "8ea72c7fb9963b2269f70ff4126b8d78"
 compatibility_flags = ["nodejs_compat"]
 workers_dev = true
-preview_urls = false   # не створювати зайві публічні адреси для кожної версії
+preview_urls = false
 
-# Не секретні налаштування. Секрети (App ID, App Secret, логін, пароль) задаються окремо:
-#   npx wrangler secret put DEYE_APP_SECRET   і т. д.
+[[rules]]
+type = "Text"
+globs = ["**/*.html", "**/*.css", "**/*.svg", "**/*.json"]
+fallthrough = true
+
+[[rules]]
+type = "Data"
+globs = ["**/*.png"]
+fallthrough = true
+
 [vars]
 DEYE_STATION_ID = "62323391"
 DEYE_STATION_NAME = "Мій дім"
-CACHE_SECONDS = "180"          # як довго Worker зберігає відповідь перед новим запитом до Deye
-# Історію (мережа з'явилась / зникла) Worker завантажує лише коли з'явилося нове вимірювання інвертора.
-# Додаткові станції, доступні через ?station=ID. Формат: "ID:назва,ID:назва". Без параметра — головна станція.
-# ALLOWED_STATION_IDS = "12345678:Дача"
-# ALLOWED_ORIGIN = "https://sergeymaximenko.github.io"   # коли буде адреса сторінки
+CACHE_SECONDS = "180"
