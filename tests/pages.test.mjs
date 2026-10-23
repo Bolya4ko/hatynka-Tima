@@ -29,7 +29,7 @@ test('Pages artifact has relative assets, versioned script and styles, and no se
     assert.ok(html.includes('src="./app.js?v=' + scriptHash + '"'));
     const styleHash = createHash('sha256').update(await readFile(new URL('../public/styles.css', import.meta.url))).digest('hex').slice(0, 16);
     assert.ok(html.includes('href="./styles.css?v=' + styleHash + '"'));
-    assert.deepEqual((await readdir(directory)).sort(), ['.nojekyll', 'app.js', 'favicon.svg', 'index.html', 'styles.css', 'iphone-step-1.png', 'iphone-step-2.png', 'iphone-step-3.png'].sort());
+    assert.deepEqual((await readdir(directory)).sort(), ['.nojekyll', 'app.js', 'favicon.svg', 'index.html', 'styles.css', 'iphone-step-1.png', 'iphone-step-2.png', 'iphone-step-3.png', 'outage-schedule.json'].sort());
     assert.match(html, /name="dashboard-api" content="https?:\/\/[^\"]+"/);
     assert.ok(!/secret|password|token/i.test(html));
   } finally {
