@@ -261,14 +261,16 @@ $('view-mode').addEventListener('change', () => {
   }
 });
 refresh();
-// No periodic polling: data are loaded when the page opens, on the refresh button, and when the user comes back
-// to the page after a while (at most once a minute), so an idle page makes no requests.
+// While the dashboard is open, it fetches fresh data from Deye every 3 minutes.
 setInterval(() => { updateMeasurementAge(); updateGridDuration(); }, 1000);
+setInterval(() => {
+  if (!document.hidden) refresh();
+}, 180000);
 setInterval(() => {
   if (!isExample() && snapshot && Date.now() - snapshot.collectedAt > 3600000) render(snapshot);
 }, 15000);
 document.addEventListener('visibilitychange', () => {
-  if (!document.hidden && Date.now() - lastLoadedAt > 60000) refresh();
+  if (!document.hidden && Date.now() - lastLoadedAt > 180000) refresh();
 });
 
 const installHelp = $('install-help');

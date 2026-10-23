@@ -1,6 +1,9 @@
-# Скопіюйте цей файл у .dev.vars (він у .gitignore) і впишіть свої значення.
-# Не надсилайте ці дані в чат та не додавайте їх у Git.
-DEYE_APP_ID=202610224918088
-DEYE_APP_SECRET=a053a90c8c0d3c2bc946999822815bcd
-DEYE_LOGIN=bolya4ko@gmail.com
-DEYE_PASSWORD=Sa1216617Sa0343
+# Скопіюйте цей файл у .dev.vars (він у .gitignore) і впишіть власні дані.
+# Не надсилайте їх у чат та не додавайте їх у Git.
+DEYE_APP_ID=your_deye_app_id
+DEYE_APP_SECRET=your_deye_app_secret
+DEYE_LOGIN=your_deye_cloud_login
+DEYE_PASSWORD=your_deye_cloud_password
+DEYE_STATION_ID=your_station_id
+DEYE_STATION_NAME=Мій дім
+CACHE_SECONDS=180
