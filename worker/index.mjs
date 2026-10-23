@@ -84,14 +84,22 @@ export function createHandler({ clientFactory = (settings, options) => new DeyeC
       const ttl = 3 * 60 * 60 * 1000;
       if (outageCache && now() - outageCache.at < ttl) return send(env, 200, outageCache.data, { 'X-Cache': 'HIT' });
       try {
-        const response = await fetcher('https://alerts.energy/kyivska-oblast', { headers: { Accept: 'text/html', 'User-Agent': 'Mozilla/5.0' } });
+        const response = await fetcher('https://r.jina.ai/http://alerts.energy/kyivska-oblast/schedule/kyivska_oblast_oblenergo/5.2');
         if (!response.ok) throw new Error('Schedule page unavailable');
         const page = await response.text();
-        const match = page.match(/"api:\/source-registry\/areas\/kyivska-oblast\/shutdowns":\{"data":(\[.*?\]),"ts"/);
-        const rows = match && JSON.parse(match[1]);
-        const row = Array.isArray(rows) && rows.find(item => item?.initiator === 'kyivska_oblast_oblenergo' && item?.queue === '5.2');
-        if (!row || !Array.isArray(row.today) || row.today.length !== 24) throw new Error('Schedule unavailable');
-        const data = { queue: '5.2', updated: row.updated || null, today: row.today.map(value => [0, 1, 2, 3].includes(value) ? value : 0), todayStatus: row.todayStatus || 'Unknown' };
+        const section = page.match(/Черга 5\.2[\s\S]*?Відключення за графіком\s*([\s\S]*?)Усього без світла/);
+        const intervals = section && [...section[1].matchAll(/(\d{2}):(\d{2})-(\d{2}):(\d{2})/g)].map(match => match.slice(1).map(Number));
+        if (!intervals?.length) throw new Error('Schedule unavailable');
+        const today = Array(24).fill(0);
+        for (const [fromHour, fromMinute, toHour, toMinute] of intervals) {
+          const from = fromHour * 60 + fromMinute, to = toHour * 60 + toMinute || 1440;
+          for (let hour = 0; hour < 24; hour++) {
+            const start = hour * 60, end = start + 60, overlap = Math.max(0, Math.min(end, to) - Math.max(start, from));
+            if (overlap === 60) today[hour] = 1;
+            else if (overlap > 0 && today[hour] !== 1) today[hour] = 2;
+          }
+        }
+        const data = { queue: '5.2', updated: new Date().toISOString(), today, todayStatus: 'ScheduleApplies' };
         outageCache = { at: now(), data };
         return send(env, 200, data, { 'X-Cache': 'MISS' });
       } catch {
