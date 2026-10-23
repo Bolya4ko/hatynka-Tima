@@ -15,7 +15,7 @@ export async function buildPages(directory = path.join(root, 'dist')) {
     html = html.replace('./' + asset + '"', './' + asset + '?v=' + version + '"');
   }
   await writeFile(path.join(directory, 'index.html'), html);
-  for (const name of ['app.js', 'styles.css', 'favicon.svg', 'iphone-step-1.png', 'iphone-step-2.png', 'iphone-step-3.png'])
+  for (const name of ['app.js', 'styles.css', 'favicon.svg', 'iphone-step-1.png', 'iphone-step-2.png', 'iphone-step-3.png', 'outage-schedule.json'])
     await copyFile(path.join(root, 'public', name), path.join(directory, name));
   await writeFile(path.join(directory, '.nojekyll'), '');
 }
