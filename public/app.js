@@ -278,7 +278,7 @@ $('open-install-help').addEventListener('click', () => installHelp.showModal());
 $('close-install-help').addEventListener('click', () => installHelp.close());
 
 // Outage schedule: queue 5.2 of DTEK Kyiv regional grids. Refresh every 3 hours.
-const outageEndpoint = new URL('/api/outage-schedule', apiBase).toString();function kyivTime(value) { return new Intl.DateTimeFormat('uk-UA', { timeZone: 'Europe/Kyiv', hour: '2-digit', minute: '2-digit' }).format(value); }
+const outageEndpoint = new URL('/api/outage-schedule', document.querySelector('meta[name="dashboard-api"]')?.content?.trim() || location.origin).toString();function kyivTime(value) { return new Intl.DateTimeFormat('uk-UA', { timeZone: 'Europe/Kyiv', hour: '2-digit', minute: '2-digit' }).format(value); }
 function renderOutage(row) {
   const chart = $('outage-chart');
   if (!row || !Array.isArray(row.today) || row.today.length !== 24) throw new Error('Графік для групи 5.2 поки не опубліковано.');
