@@ -12,7 +12,7 @@ export async function buildPages(directory = path.join(root, 'dist')) {
   for (const asset of ['app.js', 'styles.css']) {
     const bytes = await readFile(path.join(root, 'public', asset));
     const version = createHash('sha256').update(bytes).digest('hex').slice(0, 16);
-    html = html.replace('./' + asset + '"', './' + asset + '?v=' + version + '"');
+    html = html.replace(new RegExp('\\./' + asset.replace('.', '\\.') + '(?:\\?v=[^\"]*)?\"'), './' + asset + '?v=' + version + '"');
   }
   await writeFile(path.join(directory, 'index.html'), html);
   for (const name of ['app.js', 'styles.css', 'favicon.svg', 'iphone-step-1.png', 'iphone-step-2.png', 'iphone-step-3.png', 'outage-schedule.json'])
