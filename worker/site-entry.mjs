@@ -2,7 +2,7 @@
 // and its API together, so the page remains available independently of GitHub Pages.
 import api from './index.mjs';
 import page from '../public/index.html';
-import script from '../public/app.js';
+import script from './static-app.mjs';
 import styles from '../public/styles.css';
 import icon from '../public/favicon.svg';
 import schedule from '../public/outage-schedule.json';
