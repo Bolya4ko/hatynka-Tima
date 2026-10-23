@@ -84,7 +84,7 @@ export function createHandler({ clientFactory = (settings, options) => new DeyeC
       const ttl = 3 * 60 * 60 * 1000;
       if (outageCache && now() - outageCache.at < ttl) return send(env, 200, outageCache.data, { 'X-Cache': 'HIT' });
       try {
-        const response = await fetcher('https://alerts.energy/api/source-registry/areas/kyivska-oblast/shutdowns');
+        const response = await fetcher('https://alerts.energy/api/source-registry/areas/kyivska-oblast/shutdowns', { headers: { Accept: 'application/json', 'User-Agent': 'Mozilla/5.0' } });
         if (!response.ok) throw new Error('Schedule source unavailable');
         const rows = await response.json();
         const row = Array.isArray(rows) && rows.find(item => item?.initiator === 'kyivska_oblast_oblenergo' && item?.queue === '5.2');
