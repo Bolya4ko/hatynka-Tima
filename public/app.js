@@ -292,15 +292,22 @@ function renderOutage(row) {
   $('outage-updated').textContent = row.updated ? 'Оновлено: ' + kyivTime(new Date(row.updated)) : 'Опубліковано';
   $('outage-note').textContent = row.todayStatus === 'ScheduleApplies' ? 'Графік ДТЕК Київські регіональні електромережі на сьогодні. Аварійні відключення можуть не відображатися.' : 'Графік для сьогодні ще очікується від оператора.';
 }
-async function refreshOutage() {
+async function refreshOutage(force = false) {
+  const button = $('outage-refresh');
+  if (button) { button.disabled = true; button.classList.add('is-loading'); }
   try {
-    const response = await fetch(outageEndpoint, { cache: 'no-store', signal: AbortSignal.timeout(20000) });
+    const source = new URL(outageEndpoint);
+    if (force) source.searchParams.set('refresh', '1');
+    const response = await fetch(source, { cache: 'no-store', signal: AbortSignal.timeout(20000) });
     if (!response.ok) throw new Error();
     renderOutage(await response.json());
   } catch {
     $('outage-updated').textContent = 'Немає свіжого графіка';
-    $('outage-note').textContent = 'Не вдалося завантажити розклад. Спробуйте оновити сторінку пізніше.';
+    $('outage-note').textContent = 'Не вдалося завантажити розклад. Спробуйте оновити пізніше.';
+  } finally {
+    if (button) { button.disabled = false; button.classList.remove('is-loading'); }
   }
 }
+$('outage-refresh')?.addEventListener('click', () => refreshOutage(true));
 refreshOutage();
 setInterval(refreshOutage, 10800000);

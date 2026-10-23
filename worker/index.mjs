@@ -82,7 +82,7 @@ export function createHandler({ clientFactory = (settings, options) => new DeyeC
     if (url.pathname === '/' || url.pathname === '/health') return send(env, 200, { ok: true });
     if (url.pathname === '/api/outage-schedule') {
       const ttl = 3 * 60 * 60 * 1000;
-      if (outageCache && now() - outageCache.at < ttl) return send(env, 200, outageCache.data, { 'X-Cache': 'HIT' });
+      if (!url.searchParams.has('refresh') && outageCache && now() - outageCache.at < ttl) return send(env, 200, outageCache.data, { 'X-Cache': 'HIT' });
       try {
         const response = await fetcher('https://mapasvitla.com.ua/kyivska-oblast');
         if (!response.ok) throw new Error('Schedule page unavailable');

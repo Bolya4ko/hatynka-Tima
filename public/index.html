@@ -8,8 +8,8 @@
   <meta name="description" content="Електроживлення: мережа, сонячна генерація, інвертор та батарея.">
   <title>Мій дім · Електроживлення</title>
   <link rel="icon" href="./favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="./styles.css">
-  <script src="./app.js?v=20261023-1342" defer></script>
+  <link rel="stylesheet" href="./styles.css?v=20261023-1650">
+  <script src="./app.js?v=20261023-1650" defer></script>
 </head>
 <body>
   <svg class="svg-library" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -151,7 +151,7 @@
 
 
     <section class="outage-panel" aria-labelledby="outage-title">
-      <div class="outage-heading"><div><p class="eyebrow">КИЇВСЬКА ОБЛАСТЬ · БАРИШІВКА</p><h2 id="outage-title">Графік відключень · група 5.2</h2></div><span id="outage-updated" class="outage-updated">Завантажуємо графік…</span></div>
+      <div class="outage-heading"><div><p class="eyebrow">КИЇВСЬКА ОБЛАСТЬ · БАРИШІВКА</p><h2 id="outage-title">Графік відключень · група 5.2</h2></div><div class="outage-actions"><span id="outage-updated" class="outage-updated">Завантажуємо графік…</span><button type="button" class="outage-refresh" id="outage-refresh" title="Оновити графік" aria-label="Оновити графік"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 8a8 8 0 0 0-14-3L3 8m0-5v5h5M4 16a8 8 0 0 0 14 3l3-3m0 5v-5h-5"/></svg><span>Оновити</span></button></div></div>
       <div class="outage-legend" aria-label="Позначення графіка"><span><i class="slot-on"></i>Світло є</span><span><i class="slot-off"></i>Світла немає</span><span><i class="slot-partial"></i>Частково</span></div>
       <div id="outage-chart" class="outage-chart" role="img" aria-label="Погодинний графік відключень для групи 5.2"></div>
       <p id="outage-note" class="outage-note">Джерело: графік ДТЕК Київські регіональні електромережі. Аварійні відключення можуть не відображатися.</p>
