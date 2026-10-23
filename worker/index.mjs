@@ -84,11 +84,11 @@ export function createHandler({ clientFactory = (settings, options) => new DeyeC
       const ttl = 3 * 60 * 60 * 1000;
       if (outageCache && now() - outageCache.at < ttl) return send(env, 200, outageCache.data, { 'X-Cache': 'HIT' });
       try {
-        const response = await fetcher('https://r.jina.ai/http://alerts.energy/kyivska-oblast/schedule/kyivska_oblast_oblenergo/5.2');
+        const response = await fetcher('https://mapasvitla.com.ua/kyivska-oblast');
         if (!response.ok) throw new Error('Schedule page unavailable');
         const page = await response.text();
-        const section = page.match(/Черга 5\.2[\s\S]*?Відключення за графіком\s*([\s\S]*?)Усього без світла/);
-        const intervals = section && [...section[1].matchAll(/(\d{2}):(\d{2})-(\d{2}):(\d{2})/g)].map(match => match.slice(1).map(Number));
+        const section = page.match(/aria-label=\"Черга 5\.2: без світла ([^\"]*)\"/);
+        const intervals = section && [...section[1].matchAll(/(\d{2}):(\d{2})[–-](\d{2}):(\d{2})/g)].map(match => match.slice(1).map(Number));
         if (!intervals?.length) throw new Error('Schedule unavailable');
         const today = Array(24).fill(0);
         for (const [fromHour, fromMinute, toHour, toMinute] of intervals) {
