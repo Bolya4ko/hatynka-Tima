@@ -87,7 +87,7 @@ export function createHandler({ clientFactory = (settings, options) => new DeyeC
         const response = await fetcher('https://mapasvitla.com.ua/kyivska-oblast');
         if (!response.ok) throw new Error('Schedule page unavailable');
         const page = await response.text();
-        const section = page.match(/aria-label=\"Черга 5\.2: без світла ([^\"]*)\"/);
+        const section = page.match(/aria-label=\"Черга 2\.2: без світла ([^\"]*)\"/);
         const intervals = section && [...section[1].matchAll(/(\d{2}):(\d{2})[–-](\d{2}):(\d{2})/g)].map(match => match.slice(1).map(Number));
         if (!intervals?.length) throw new Error('Schedule unavailable');
         const today = Array(24).fill(0);
@@ -99,7 +99,7 @@ export function createHandler({ clientFactory = (settings, options) => new DeyeC
             else if (overlap > 0 && today[hour] !== 1) today[hour] = 2;
           }
         }
-        const data = { queue: '5.2', updated: new Date().toISOString(), today, todayStatus: 'ScheduleApplies' };
+        const data = { queue: '2.2', updated: new Date().toISOString(), today, todayStatus: 'ScheduleApplies' };
         outageCache = { at: now(), data };
         return send(env, 200, data, { 'X-Cache': 'MISS' });
       } catch {

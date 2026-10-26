@@ -52,7 +52,7 @@ test('worker opens another station only from the allowed list; default stays the
   const seen = [];
   const handle = createHandler({ clientFactory: settings => ({ dashboard: async () => { seen.push(settings.stationId); return { ...sample, station: { name: settings.stationName } }; } }) });
   const withList = { ...env, ALLOWED_STATION_IDS: '2:Друга станція' };
-  assert.equal((await (await get(handle, '/api/status', withList)).json()).station.name, 'Мій дім');
+  assert.equal((await (await get(handle, '/api/status', withList)).json()).station.name, 'Хатинка Тіма');
   assert.equal((await (await get(handle, '/api/status?station=2', withList)).json()).station.name, 'Друга станція');
   assert.equal((await get(handle, '/api/status?station=999', withList)).status, 403);
   assert.deepEqual(seen, ['1', '2']);
@@ -65,4 +65,22 @@ test('worker allows only GET and sends CORS headers', async () => {
   assert.equal((await get(handle)).headers.get('Access-Control-Allow-Origin'), '*');
   assert.equal((await get(handle, '/api/status', { ...env, ALLOWED_ORIGIN: 'https://x.example' })).headers.get('Access-Control-Allow-Origin'), 'https://x.example');
   assert.equal((await get(handle, '/other')).status, 404);
+});
+
+test('outage schedule selects Kryukivshchyna queue 2.2, preserves half hours and refreshes cache', async () => {
+  let calls = 0;
+  const handle = createHandler({ fetcher: async () => {
+    calls++;
+    return new Response('<div aria-label="Черга 5.2: без світла 00:00–03:00"></div>' +
+      '<div aria-label="Черга 2.2: без світла 09:00–13:00, 19:30–23:30"></div>');
+  } });
+  const first = await get(handle, '/api/outage-schedule');
+  assert.equal(first.status, 200);
+  const data = await first.json();
+  assert.equal(data.queue, '2.2');
+  assert.deepEqual(data.today, [0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,2,1,1,1,2]);
+  assert.equal((await get(handle, '/api/outage-schedule')).headers.get('X-Cache'), 'HIT');
+  assert.equal(calls, 1);
+  assert.equal((await get(handle, '/api/outage-schedule?refresh=1')).headers.get('X-Cache'), 'MISS');
+  assert.equal(calls, 2);
 });

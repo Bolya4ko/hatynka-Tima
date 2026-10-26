@@ -277,11 +277,11 @@ const installHelp = $('install-help');
 $('open-install-help').addEventListener('click', () => installHelp.showModal());
 $('close-install-help').addEventListener('click', () => installHelp.close());
 
-// Outage schedule: queue 5.2 of DTEK Kyiv regional grids. Refresh every 3 hours.
+// Outage schedule: queue 2.2 of DTEK Kyiv regional grids. Refresh every 3 hours.
 const outageEndpoint = new URL('/api/outage-schedule', document.querySelector('meta[name="dashboard-api"]')?.content?.trim() || location.origin).toString();function kyivTime(value) { return new Intl.DateTimeFormat('uk-UA', { timeZone: 'Europe/Kyiv', hour: '2-digit', minute: '2-digit' }).format(value); }
 function renderOutage(row) {
   const chart = $('outage-chart');
-  if (!row || !Array.isArray(row.today) || row.today.length !== 24) throw new Error('Графік для групи 5.2 поки не опубліковано.');
+  if (!row || !Array.isArray(row.today) || row.today.length !== 24) throw new Error('Графік для групи 2.2 поки не опубліковано.');
   chart.replaceChildren(...row.today.map((state, hour) => {
     const kind = state === 1 ? 'off' : state === 2 || state === 3 ? 'partial' : 'on';
     const title = state === 1 ? 'Світла немає' : state === 2 || state === 3 ? 'Часткове відключення' : 'Світло є';
