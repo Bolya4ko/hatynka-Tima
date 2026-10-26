@@ -1,4 +1,4 @@
-name = "deye-power-dashboard"
+name = "hatynka-tima"
 main = "worker/site-entry.mjs"
 compatibility_date = "2025-01-01"
 account_id = "8ea72c7fb9963b2269f70ff4126b8d78"
@@ -17,6 +17,6 @@ globs = ["**/*.png"]
 fallthrough = true
 
 [vars]
-DEYE_STATION_ID = "62323391"
+DEYE_STATION_ID = "61744812"
 DEYE_STATION_NAME = "Мій дім"
 CACHE_SECONDS = "180"

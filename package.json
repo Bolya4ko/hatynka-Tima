@@ -13,5 +13,8 @@
     "worker:local": "node tools/local-worker.mjs",
     "worker:deploy": "wrangler deploy",
     "build": "node tools/build-pages.mjs"
+  },
+  "devDependencies": {
+    "wrangler": "^4.153.0"
   }
 }
