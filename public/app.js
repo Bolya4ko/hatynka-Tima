@@ -90,7 +90,7 @@ function render(data, example = false) {
   const grid = stale ? 'unknown' : data.grid;
   const output = stale ? 'unknown' : data.output;
   const soc = stale ? null : data.soc;
-  $('station-name').textContent = data.station?.name || 'Хатинка Тіма';
+  $('station-name').textContent = data.station?.name || 'Хатинка Тима';
   $('source-text').textContent = example ? 'Демонстрація' : stale ? 'Немає свіжих даних' : 'Deye Cloud';
   $('source-pill').dataset.state = example ? 'demo' : stale ? 'unknown' : 'on';
   $('data-time').textContent = data.collectedAt ? measurementDateLabel(data.collectedAt) : 'Очікуємо дані';
@@ -179,7 +179,7 @@ function render(data, example = false) {
 function example(mode) {
   const now = Date.now();
   const mains = mode === 'on' || mode === 'standby';
-  return { station: { name: 'Хатинка Тіма' }, collectedAt: now - (mode === 'stale' ? 3660000 : 300000),
+  return { station: { name: 'Хатинка Тима' }, collectedAt: now - (mode === 'stale' ? 3660000 : 300000),
     stale: mode === 'stale', grid: mains ? 'on' : 'off', output: mode === 'output-off' ? 'off' : 'on',
     allPhasesZero: !mains, soc: mode === 'on' ? 82 : mode === 'standby' ? 100 : mode === 'output-off' ? 10 : 61,
     batteryMode: mode === 'on' ? 'charging' : ['standby', 'output-off'].includes(mode) ? 'idle' : 'discharging',

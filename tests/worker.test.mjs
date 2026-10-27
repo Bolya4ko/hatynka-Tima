@@ -52,7 +52,7 @@ test('worker opens another station only from the allowed list; default stays the
   const seen = [];
   const handle = createHandler({ clientFactory: settings => ({ dashboard: async () => { seen.push(settings.stationId); return { ...sample, station: { name: settings.stationName } }; } }) });
   const withList = { ...env, ALLOWED_STATION_IDS: '2:Друга станція' };
-  assert.equal((await (await get(handle, '/api/status', withList)).json()).station.name, 'Хатинка Тіма');
+  assert.equal((await (await get(handle, '/api/status', withList)).json()).station.name, 'Хатинка Тима');
   assert.equal((await (await get(handle, '/api/status?station=2', withList)).json()).station.name, 'Друга станція');
   assert.equal((await get(handle, '/api/status?station=999', withList)).status, 403);
   assert.deepEqual(seen, ['1', '2']);

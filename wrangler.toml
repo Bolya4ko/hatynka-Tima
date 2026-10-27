@@ -18,5 +18,5 @@ fallthrough = true
 
 [vars]
 DEYE_STATION_ID = "61744812"
-DEYE_STATION_NAME = "Хатинка Тіма"
+DEYE_STATION_NAME = "Хатинка Тима"
 CACHE_SECONDS = "180"

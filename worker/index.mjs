@@ -24,7 +24,7 @@ export function settingsFromEnv(env) {
     if (!String(env[name] ?? '').trim()) throw new Error('Missing configuration: ' + name);
     settings[key] = String(env[name]);
   }
-  settings.stationName = env.DEYE_STATION_NAME || 'Хатинка Тіма';
+  settings.stationName = env.DEYE_STATION_NAME || 'Хатинка Тима';
   return settings;
 }
 // ALLOWED_STATION_IDS: "61167187:Моя станція,12345" — станції, які можна відкрити через ?station=ID.
